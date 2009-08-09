@@ -1,0 +1,104 @@
+
+#source {
+	display: none;
+}
+
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+h1 {
+	background-color: #3366FF;
+	margin: 0;
+	padding: 0.2em 0.5em;
+	border-bottom: 1px solid #999999;
+	color: #FFFFFF;
+}
+
+form {
+	background-color: #EFEFEF;
+	padding: 10px;
+	margin: 10px;
+	width: 600px;
+	border: 1px solid #CCCCCC;
+}
+
+form label {
+	display: block;
+	clear: left;
+	float: left;
+	height: 1.8em;
+	line-height: 1.8em;
+	font-size: 80%;
+	color: #999999;
+	text-align: right;
+	margin-right: 10px;
+	margin-bottom: 5px;
+}
+
+form input {
+	float: right;
+	height: 1.8em;
+	margin-bottom: 5px;
+	width: 500px;
+}
+
+form textarea {
+	width: 100%;
+}
+
+form p {
+	margin: 0;
+}
+
+#preview {
+	border: 3px solid #666666;
+	width: 614px;
+	margin: 10px;
+}
+
+#preview h2 {
+	margin: 10px;
+	color: #333333;
+}
+
+#preview p {
+	margin: 10px;
+	padding: 10px;
+	background-color: #EFEFEF;
+}
+
+#preview address {
+	margin: 10px;
+	font-size: 80%;
+	font-style: normal;
+	color: #999999;
+	text-align: right;
+}
+
+#preview address a {
+	color: #666666;
+	text-decoration: none;
+}
+
+
+#showcase h2 {
+	margin: 10px;
+	color: #333333;
+}
+
+#showcase h3 {
+	margin: 10px 20px;
+}
+
+#showcase h4 {
+	margin: 10px 40px 5px;
+	font-size: 100%;
+	color: #999999;
+}
+
+#showcase ul {
+	margin: 5px 30px 10px;
+}
+
