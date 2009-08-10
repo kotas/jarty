@@ -31,6 +31,9 @@ var Jarty = window.Jarty = {
 	version: '0.1.0',
 	debug: false,
 	compiler: null,
+	eval: function (source, dict) {
+		return this.compile(source)(dict);
+	},
 	compile: function (source) {
 		this.compiler = this.compiler || (new Jarty.Compiler());
 		return this.compiler.compileToFunction(source);
@@ -1158,7 +1161,7 @@ if (typeof jQuery != "undefined") {
 	jQuery.fn.extend({
 		jarty: function (obj, noCache) {
 			if (noCache) {
-				var compiled = Jarty.compiled(this.val() || this.html());
+				var compiled = Jarty.compile(this.val() || this.html());
 			} else {
 				var compiled = this.data(cacheKey);
 				if (!compiled) {

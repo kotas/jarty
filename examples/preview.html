@@ -15,10 +15,12 @@
 		var dict = {};
 
 		function update() {
+			// Collect { id => value } mapping for each inputs.
 			inputs.each(function () {
 				var el = $(this);
 				dict[el.attr("id")] = el.val();
 			})
+			// And pass the mappings to jQuery.fn.jarty!
 			$("#preview").html( $("#source").jarty(dict) );
 		}
 
@@ -44,6 +46,7 @@
 </div>
 
 <script id="source" type="text/jarty">
+{* <![CDATA[ *}
 	<h2>{$title|escape|default:'(Untitled)'}</h2>
 
 	<div>
@@ -57,6 +60,7 @@
 		{/if}
 		at {$jarty.now|date_format:'%c'}
 	</address>
+{* ]]> *}
 </script>
 
 </body>

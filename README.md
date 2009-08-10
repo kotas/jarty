@@ -53,6 +53,10 @@ So if you use the same template several times, you want to keep the
 compiled function and just call it as you want.
 Very faster than compiling every time. See tests/benchmark.html
 
+If you just want to evaluate a template once, use Jarty.eval().
+
+    Jarty.eval("Hello, {$thing}!", { thing: "world" }) => "Hello, world!"
+
 ## For jQuery users
 
 Jarty defines jQuery.fn.jarty() if jQuery object exists.

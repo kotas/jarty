@@ -14,13 +14,14 @@
 <div id="showcase"></div>
 
 <script id="source" type="text/jarty">
+{* <![CDATA[ *}
 	<h2>Showcase</h2>
 
 	{foreach from=$fruits item=fruit}
 	<div class="fruit">
 		<h3><span style="color:{$fruit.color};">{$fruit.name}</span></h3>
 
-		<h4>{$fruit.name}'s tastes</h4>
+		<h4>{$fruit.name}&#039;s tastes</h4>
 		<ul>
 		{foreach from=$fruit.tastes item=taste}
 			<li>{$taste}</li>
@@ -28,6 +29,7 @@
 		</ul>
 	</div>
 	{/foreach}
+{* ]]> *}
 </script>
 
 <script id="script" type="text/javascript">
@@ -62,14 +64,10 @@ var dictionary = {
 // First, we gonna get the template source from #source...
 var source = document.getElementById("source").innerHTML;
 
-// And, pass it to Jarty.compile().
-// The returned value `template` is actually a Function.
-var template = Jarty.compile(source);
+// And pass it to Jarty.eval() with the dictionary.
+var result = Jarty.eval(source, dictionary);
 
-// Simply call the template with the dictionary to get the result.
-var result = template(dictionary);
-
-// Finally, we put the result directly to #showcase.
+// Put it to the showcase!
 document.getElementById("showcase").innerHTML = result;
 
 // And that's it!
