@@ -175,10 +175,13 @@ Jarty.Compiler.prototype = {
 	},
 	compileToFunction: function (source) {
 		var compiled, script = this.compileToString(source);
+		if (!script)
+			throw new SyntaxError("Jarty compile error: " + (e.message || e));
 		try {
 			compiled = new Function("_", script);
 		} catch (e) {
-			throw new SyntaxError("Jarty compile error: " + (e.message || e));
+			throw new SyntaxError("Jarty compile error: " + (e.message || e) + "\n" +
+				(script.length > 60 ? script.substring(0, 60) + "..." : script));
 		}
 		return compiled;
 	}
