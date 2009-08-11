@@ -31,6 +31,7 @@ var Jarty = window.Jarty = {
 	version: '0.1.0',
 	debug: false,
 	compiler: null,
+	__globals: null,
 	eval: function (source, dict) {
 		return this.compile(source)(dict);
 	},
@@ -40,6 +41,19 @@ var Jarty = window.Jarty = {
 	},
 	debugPrint: function (s) {
 		console.log(s);
+	},
+	globals: function (dict) {
+		if (!this.__globals)
+			this.__globals = Jarty.Namespace.prototype = {};
+		for (var key in dict)
+			this.__globals[key] = dict[key];
+	},
+	clearGlobals: function () {
+		this.__globals = Jarty.Namespace.prototype = {};
+	},
+	removeGlobal: function (key) {
+		if (this.__globals)
+			delete this.__globals[key];
 	}
 };
 
@@ -323,7 +337,7 @@ Jarty.Runtime = function (dict) {
 }
 Jarty.Runtime.prototype = {
 	write: function (str) {
-		this.buffer += str;
+		if (str !== undefined && str !== null) this.buffer += str;
 	},
 	startCapture: function (name, assign) {
 		if (!this.capturing) {
@@ -750,6 +764,10 @@ Jarty.Utils.Escape = {
 	}
 };
 
+Jarty.Namespace = function (dict) {
+	for (var key in dict)
+		this[key] = dict[key];
+};
 
 var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"',
 	eSingleQuoteString = '\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'',
@@ -775,7 +793,9 @@ Jarty.Rules = {
 
 	start: {
 		enter: function (out) {
-			out.write("_=_||{};var r=new Jarty.Runtime(_),p=Jarty.Pipe,f=Jarty.Function;");
+			out.write("_=_||{};",
+				"if(Jarty.__globals){_=new Jarty.Namespace(_)}",
+				"var r=new Jarty.Runtime(_),p=Jarty.Pipe,f=Jarty.Function;");
 		},
 		leave: function (out) {
 			out.write("return r.finish();");

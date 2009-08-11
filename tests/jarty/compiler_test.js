@@ -31,6 +31,7 @@ new Test.Unit.Runner({
 	},
 	teardown: function () {
 		delete this.compiler;
+		Jarty.clearGlobals();
 	},
 
 	testInstantiate: function () {
@@ -73,6 +74,12 @@ new Test.Unit.Runner({
 		this.assertCompiled("abc", "{$foo}", { foo: "abc" });
 		this.assertCompiled("abcdef", "{$foo}{$bar}", { foo: "abc", bar: "def" });
 		this.assertCompiled("abcdefghijklmno", "abc{$foo}ghi{$bar}mno", { foo: "def", bar: "jkl" });
+	},
+	testEmbedUndefinedVariable: function () {
+		this.assertCompiled("abc", "a{$foo}b{$bar}c");
+	},
+	testEmbedNullVariable: function () {
+		this.assertCompiled("abc", "a{$foo}b{$bar}c", { foo: null, bar: null });
 	},
 	testEmbedVariableWithDots: function () {
 		this.assertCompiled("abc", "{$foo.bar}", { foo: { bar: "abc" } });
@@ -353,6 +360,22 @@ new Test.Unit.Runner({
 		this.assertCompiled("1,2,3", "{counter print=false assign='x'}{$x},{counter print=false assign='x'}{$x},{counter print=false assign='x'}{$x}");
 		this.assertCompiled("1,1,2,2,3,3",
 			"{counter name='a'},{counter name='b'},{counter name='a'},{counter name='b'},{counter name='a'},{counter name='b'}");
+	},
+
+	testGlobals: function () {
+		Jarty.globals({ foo: 123, bar: 456 });
+		this.assertCompiled("abc,456,def", "{$foo},{$bar},{$baz}", { foo: "abc", baz: "def" });
+		this.assertCompiled("123,456,def", "{$foo},{$bar},{$baz}", { baz: "def" });
+	},
+	testClearGlobals: function () {
+		Jarty.globals({ foo: 123, bar: 456 });
+		Jarty.clearGlobals();
+		this.assertCompiled("abc,,def", "{$foo},{$bar},{$baz}", { foo: "abc", baz: "def" });
+	},
+	testRemoveGlobal: function () {
+		Jarty.globals({ foo: 123, bar: 456 });
+		Jarty.removeGlobal("foo");
+		this.assertCompiled(",456,def", "{$foo},{$bar},{$baz}", { baz: "def" });
 	}
 
 });
