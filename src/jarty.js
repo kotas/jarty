@@ -28,7 +28,7 @@
 (function () {
 
 var Jarty = window.Jarty = {
-	version: '0.1.0',
+	version: '0.1.1',
 	debug: false,
 	compiler: null,
 	__globals: null,
