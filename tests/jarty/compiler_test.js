@@ -277,6 +277,54 @@ new Test.Unit.Runner({
 		this.assertCompiled("def", "{if not true}abc{else}def{/if}");
 		this.assertCompiled("def", "{if !$foo}abc{else}def{/if}", { foo: true });
 	},
+	testIfEqual: function () {
+		this.assertCompiled("abc", "{if $foo == 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo == 'hoge'}abc{/if}", { foo: "hoge" });
+		this.assertCompiled("abc", "{if $foo == $bar}abc{/if}", { foo: 123, bar: 123 });
+		this.assertCompiled("", "{if $foo == 456}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo == 123 && $bar == 456}abc{/if}", { foo: 123, bar: 456 });
+	},
+	testIfNotEqual: function () {
+		this.assertCompiled("", "{if $foo != 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("", "{if $foo != 'hoge'}abc{/if}", { foo: "hoge" });
+		this.assertCompiled("", "{if $foo != $bar}abc{/if}", { foo: 123, bar: 123 });
+		this.assertCompiled("abc", "{if $foo != 456}abc{/if}", { foo: 123 });
+		this.assertCompiled("", "{if $foo != 123 && $bar != 456}abc{/if}", { foo: 123, bar: 456 });
+		this.assertCompiled("abc", "{if $foo != 123 || $bar != 456}abc{/if}", { foo: 123, bar: 789 });
+	},
+	testIfGreaterThan: function () {
+		this.assertCompiled("abc", "{if $foo > 123}abc{/if}", { foo: 200 });
+		this.assertCompiled("", "{if $foo > 123}abc{/if}", { foo: 100 });
+		this.assertCompiled("", "{if $foo > 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo > $bar}abc{/if}", { foo: 123, bar: 100 });
+		this.assertCompiled("abc", "{if $foo > 123 && $bar > 456}abc{/if}", { foo: 200, bar: 500 });
+	},
+	testIfGreaterThanOrEqual: function () {
+		this.assertCompiled("abc", "{if $foo >= 123}abc{/if}", { foo: 200 });
+		this.assertCompiled("", "{if $foo >= 123}abc{/if}", { foo: 100 });
+		this.assertCompiled("abc", "{if $foo >= 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo >= $bar}abc{/if}", { foo: 123, bar: 100 });
+	},
+	testIfLessThan: function () {
+		this.assertCompiled("", "{if $foo < 123}abc{/if}", { foo: 200 });
+		this.assertCompiled("abc", "{if $foo < 123}abc{/if}", { foo: 100 });
+		this.assertCompiled("", "{if $foo < 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("", "{if $foo < $bar}abc{/if}", { foo: 123, bar: 100 });
+		this.assertCompiled("", "{if $foo < 123 && $bar < 456}abc{/if}", { foo: 200, bar: 500 });
+	},
+	testIfLessThanOrEqual: function () {
+		this.assertCompiled("", "{if $foo <= 123}abc{/if}", { foo: 200 });
+		this.assertCompiled("abc", "{if $foo <= 123}abc{/if}", { foo: 100 });
+		this.assertCompiled("abc", "{if $foo <= 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("", "{if $foo <= $bar}abc{/if}", { foo: 123, bar: 100 });
+	},
+	testIfMaths: function () {
+		this.assertCompiled("abc", "{if $foo == 1 + 2}abc{/if}", { foo: 3 });
+		this.assertCompiled("abc", "{if $foo - 1 == 2}abc{/if}", { foo: 3 });
+		this.assertCompiled("abc", "{if $foo * 2 == 6}abc{/if}", { foo: 3 });
+		this.assertCompiled("abc", "{if $foo / 3 == 1}abc{/if}", { foo: 3 });
+		this.assertCompiled("abc", "{if $foo % 3 == 0}abc{/if}", { foo: 3 });
+	},
 	testElseIf: function () {
 		this.assertCompiled("def", "{if false}abc{elseif true}def{else}ghi{/if}");
 		this.assertCompiled("ghi", "{if false}abc{elseif false}def{else}ghi{/if}");

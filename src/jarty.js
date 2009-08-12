@@ -1115,7 +1115,7 @@ Jarty.Rules = {
 		}
 	},
 	inIfCondition: {
-		search: new RegExp("^\\s*(?:(\\(|\\)|&&|\\|\\||!)|(and)|(or)|(not)|(" + eValue + "))"),
+		search: new RegExp("^\\s*(?:(\\(|\\)|&&|\\|\\||==|>=|<=|!=|[!><%+/*-])|(and)|(or)|(not)|(" + eValue + "))"),
 		found: function (out, matched) {
 			if (matched[1]) {
 				out.write(matched[1]);
