@@ -360,6 +360,7 @@ Jarty.Runtime.prototype = {
 		this.capturing.push({ name: name, assign: assign });
 	},
 	writeCaptured: function (str) {
+		if (str === undefined || str === null) return;
 		for (var i = this.capturing.length - 1; i >= 0; i--) {
 			this.env.captures[this.capturing[i].name] += str;
 			if (this.capturing[i].name == "__strip__") break;
@@ -782,12 +783,12 @@ var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"',
 	ePipe = '(?:\\|@?\\w+(?::' + eScalar + ')*)',
 	eValue = eScalar + '('+ ePipe + '*)',
 		/* $1 = varname, $2 = varsuffic, $3 = string, $4 = number, $5 = bareword, $6 = pipe */
-	eCommentTag = '{\\*(.*?)\\*}',
-	eLiteralBlock = '{\\s*literal\\s*}(.*?){\\s*/literal\\s*}',
-	eJavaScriptBlock = '{\\s*javascript\\s*}(.*?){\\s*/javascript\\s*}',
-	eEmbedTag = '{\\s*(\\$\\w+.*?)\\s*}',
-	eOpenTag = '{\\s*(\\w+.*?)\\s*}',
-	eCloseTag = '{\\s*/(\\w+)\\s*}';
+	eCommentTag = '\\{\\*(.*?)\\*\\}',
+	eLiteralBlock = '\\{\\s*literal\\s*\\}(.*?)\\{\\s*/literal\\s*\\}',
+	eJavaScriptBlock = '\\{\\s*javascript\\s*\\}(.*?)\\{\\s*/javascript\\s*\\}',
+	eEmbedTag = '\\{\\s*(\\$\\w+.*?)\\s*\\}',
+	eOpenTag = '\\{\\s*(\\w+.*?)\\s*\\}',
+	eCloseTag = '\\{\\s*/(\\w+)\\s*\\}';
 
 Jarty.Rules = {
 
