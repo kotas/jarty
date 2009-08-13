@@ -927,8 +927,10 @@ Jarty.Rules = {
 			} else if (matched[3]) { // string
 				if (matched[3].length <= 2)
 					out.write('""');
-				else
+				else {
 					this.transitTo("inString", matched[3].slice(1, -1), closePipe);
+					closePipe = undefined;
+				}
 			} else if (matched[4]) { // number
 				out.write(matched[4]);
 			} else if (matched[5]) { // bareword
@@ -1034,7 +1036,7 @@ Jarty.Rules = {
 		enter: function (out) {
 			this.data.first = true;
 		},
-		search: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|`(' + eValue + ')`'),
+		search: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|^`(' + eValue + ')`'),
 		found: function (out, matched) {
 			if (this.data.first)
 				this.data.first = false;
