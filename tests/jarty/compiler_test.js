@@ -368,6 +368,28 @@ new Test.Unit.Runner({
 			{ foo: [ "a", "b", "c" ] });
 	},
 
+	testForFromTo: function () {
+		this.assertCompiled("123", "{for from=1 to=3 item=count}{$count}{/for}");
+		this.assertCompiled("456", "{for from=$foo to=$bar item=count}{$count}{/for}", { foo: 4, bar: 6 });
+		this.assertCompiled("", "{for from=3 to=1 item=count}{$count}{/for}");
+	},
+	testForFromToStep: function () {
+		this.assertCompiled("147", "{for from=1 to=7 step=3 item=count}{$count}{/for}");
+		this.assertCompiled("321", "{for from=$foo to=$bar step=-1 item=count}{$count}{/for}", { foo: 3, bar: 1 });
+	},
+	testForStepZeroFails: function () {
+		this.assertRaise("SyntaxError", function () {
+			var compiled = Jarty.compile("{for to=3 step=0 item=count}{$count}{/for}");
+			compiled();
+		});
+	},
+	testForElse: function () {
+		this.assertCompiled("abc", "{for from=1 to=0 item=count}{$count}{forelse}abc{/for}");
+	},
+	testNestedFor: function () {
+		this.assertCompiled("19,18,17,29,28,27,39,38,37,", "{for from=1 to=3 item=a}{for from=9 to=7 step=-1 item=b}{$a}{$b},{/for}{/for}");
+	},
+
 	testFunctionLdelim: function () {
 		this.assertCompiled("{", "{ldelim}");
 	},

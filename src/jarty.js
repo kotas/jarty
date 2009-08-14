@@ -456,6 +456,35 @@ Jarty.Runtime.prototype = {
 			elseFunc();
 		}
 	},
+	for_: function (params, yieldFunc, elseFunc) {
+		if (!params || params.to === undefined)
+			this.raiseRuntimeError("for: `to` is not given");
+		if (params.step !== undefined && parseInt(params.step) == 0)
+			this.raiseRuntimeError("for: `step` should not be zero")
+		if (!params.item)
+			this.raiseRuntimeError("for: `item` is not given");
+
+		var from = parseInt(params.from) || 0,
+			to = parseInt(params.to) || 0,
+			step = parseInt(params.step) || 1,
+			dict = this.dict,
+			item = params.item,
+			yielded = false;
+		if (step < 0) {
+			for (var i = from; i >= to; i += step) {
+				dict[item] = i;
+				yieldFunc(); yielded = true;
+			}
+		} else {
+			for (var i = from; i <= to; i += step) {
+				dict[item] = i;
+				yieldFunc(); yielded = true;
+			}
+		}
+		if (!yielded && elseFunc) {
+			elseFunc();
+		}
+	},
 	raiseRuntimeError: function (message) {
 		throw new SyntaxError("Jarty runtime error: " + message);
 	}
@@ -1158,6 +1187,29 @@ Jarty.Rules = {
 		enter: function (out) {
 			out.write("});");
 		}
+	},
+
+	inForTag: {
+		search: /^for(\s+.+)$/,
+		found: function (out, matched) {
+			out.write("r.for_(");
+			this.transitTo("inOpenTagArgs", matched[1], function (out) {
+				out.write(", function () {");
+			});
+		},
+		notfound: function (out, extra) {
+			this.raiseParseError("invalid for tag");
+		}
+	},
+	inForElseTag: {
+		enter: function (out) {
+			out.write("}, function () {");
+		}
+	},
+	inEndForTag: {
+		enter: function (out) {
+			out.write("});");
+		}
 	}
 
 };
@@ -1169,7 +1221,10 @@ Jarty.Rules.SpecialTags = {
 	"/if": "inEndIfTag",
 	"foreach": "inForeachTag",
 	"foreachelse": "inForeachElseTag",
-	"/foreach": "inEndForeachTag"
+	"/foreach": "inEndForeachTag",
+	"for": "inForTag",
+	"forelse": "inForElseTag",
+	"/for": "inEndForTag"
 };
 
 Jarty.Rules.SpecialBarewords = {
