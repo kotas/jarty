@@ -378,7 +378,7 @@ new Test.Unit.Runner({
 		this.assertCompiled("321", "{for from=$foo to=$bar step=-1 item=count}{$count}{/for}", { foo: 3, bar: 1 });
 	},
 	testForStepZeroFails: function () {
-		this.assertRaise("SyntaxError", function () {
+		this.assertRaise("EvalError", function () {
 			var compiled = Jarty.compile("{for to=3 step=0 item=count}{$count}{/for}");
 			compiled();
 		});
@@ -413,7 +413,7 @@ new Test.Unit.Runner({
 		this.assertCompiled("  foo  abcd e fghi  bar  ", "{capture}  foo  {strip}   \n  abc  \n\t  d e f  \r\n  ghi  {/strip}  bar  {/capture}{$jarty.capture.default}");
 	},
 	testFunctionCaptureInStripFails: function () {
-		this.assertRaise("SyntaxError", function () {
+		this.assertRaise("EvalError", function () {
 			var compiled = Jarty.compile("{strip}{capture} \n abc \n d e f \n ghi {/capture}{/strip}");
 			compiled();
 		});
