@@ -161,12 +161,14 @@ Jarty.Compiler.RuleRunner.prototype = {
 			var matched, source = current.source;
 			while (this.stay && source.length > 0) {
 				if (matched = source.match(rule.search)) {
+					current.matched = matched;
 					if (matched.index > 0)
 						rule.skipped && rule.skipped.call(this, this.buffer, source.slice(0, matched.index));
 					rule.found && rule.found.call(this, this.buffer, matched);
 					current.index += matched.index + matched[0].length;
 					current.source = source = source.slice(matched.index + matched[0].length);
 				} else {
+					current.matched = null;
 					rule.notfound && rule.notfound.call(this, this.buffer, source);
 					current.index += source.length;
 					current.source = source = '';
@@ -221,35 +223,23 @@ Jarty.Compiler.RuleRunner.prototype = {
 			throw new ReferenceError("rule `" + ruleName + "` is not defined.");
 		newSource = newSource !== undefined ? newSource : this.current.source;
 		return {
+			originalSource: newSource,
 			source: newSource,
 			ruleName: ruleName,
 			rule: rule,
 			index: 0,
 			data: {},
+			matched: null,
 			callback: undefined
 		};
 	},
 	raiseParseError: function (message) {
-		throw new SyntaxError("Jarty parse error: " + message + "\n" + this.getStackTrace());
+		var e = new SyntaxError("Jarty parse error: " + message);
+		e.jartyStack = this.stack;
+		throw e;
 	},
 	debugPrint: function (message) {
-		Jarty.debugPrint("@ Jarty " + message + "\n" + this.getStackTrace());
-	},
-	getStackTrace: function () {
-		var trace = "";
-		if (this.stack && this.stack.length > 0) {
-			var indent = "";
-			for (var i = 0, l = this.stack.length; i < l; i++) {
-				var c = this.stack[i];
-				if (trace) trace += "\n";
-				trace += indent + c.ruleName + " at " + c.index + ": " +
-					(c.source.length > 60 ? c.source.substring(0, 60) + "..." : c.source);
-				indent += " ";
-			}
-		} else {
-			trace = "(stack is empty)";
-		}
-		return trace;
+		Jarty.debugPrint("@ Jarty " + message);
 	}
 };
 
@@ -409,7 +399,7 @@ Jarty.Runtime.prototype = {
 		}
 	},
 	raiseRuntimeError: function (message) {
-		throw new SyntaxError("Jarty runtime error: " + message);
+		throw new EvalError("Jarty runtime error: " + message);
 	}
 };
 
@@ -783,7 +773,7 @@ Jarty.Rules = {
 			var method = matched[1].toLowerCase();
 			if (Jarty.Rules.SpecialTags[method]) {
 				this.delegateTo(Jarty.Rules.SpecialTags[method], matched[0]);
-			} else {
+			} else if (Jarty.Function[method]) {
 				out.write("f[", Jarty.Utils.quote(method), "]");
 				if (matched[2]) {
 					out.write("(r,");
@@ -793,6 +783,8 @@ Jarty.Rules = {
 				} else {
 					out.write("(r, {});");
 				}
+			} else {
+				this.raiseParseError("unknown tag: {" + method + "}");
 			}
 		},
 		notfound: function (out, extra) {
@@ -994,6 +986,8 @@ Jarty.Rules = {
 		found: function (out, matched) {
 			var method = matched[1].replace(
 				/_(.)/g, function ($0, $1) { return $1.toUpperCase() });
+			if (!Jarty.Pipe.prototype[method])
+				this.raiseParseError("unknown pipe: " + matched[1]);
 			out.write("[", Jarty.Utils.quote(method), "](r");
 			if (matched[2]) {
 				this.transitTo("inPipeArgs", matched[2], function (out) { out.write(")") });
