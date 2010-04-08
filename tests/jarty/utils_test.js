@@ -25,20 +25,6 @@ new Test.Unit.Runner({
 	testQuoteEscapesUnsafeCharacters: function () {
 		this.assertEqual('"abc\\ndef"', Jarty.Utils.quote("abc\ndef"));
 		this.assertEqual('"abc\'def\'ghi"', Jarty.Utils.quote("abc'def'ghi"));
-	},
-
-	testMakeDateFromValueReturnsDate: function () {
-		this.assert(Jarty.Utils.makeDateFromValue("") instanceof Date);
-		this.assert(Jarty.Utils.makeDateFromValue(false) instanceof Date);
-	},
-	testMakeDateFromValueParsesString: function () {
-		var d = Jarty.Utils.makeDateFromValue("2009-02-14 08:31:30");
-		this.assertEqual(1234567890000, d.getTime());
-	},
-
-	testFormatDate: function () {
-		var d = new Date(2009, 8, 25, 12, 34, 56);
-		this.assertEqual("2009-09-25 12:34:56", Jarty.Utils.formatDate("%Y-%m-%d %H:%M:%S", d));
 	}
 
 });
