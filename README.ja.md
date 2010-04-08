@@ -107,3 +107,14 @@ Jarty.Pipe.prototype にメソッドを定義すればパイプを作れます�
 
 パイプメソッドの中では this.value で現在の値を参照/設定できます。
 また、メソッドチェーンで実装されているため、必ず return this をする必要があります。
+
+## デバッグ
+
+テンプレート中にエラーがある場合、Jarty は ParseError 例外を throw します。
+
+`src/jarty.debugger.js` を読み込むと、これらの例外をポップアップとしてページ中に表示する事ができます。
+
+    <script src="jarty.js" type="text/javascript" charset="utf-8"></script>
+    <script src="jarty.debugger.js" type="text/javascript" charset="utf-8"></script>
+
+なお `jarty.debugger.js` は `jarty.js` の後ろで読み込む必要があります。

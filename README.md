@@ -4,7 +4,7 @@
 
 - Jarty is a template engine.
 - JavaScript implementation of Smarty ( http://www.smarty.net/ ), which
-  is the popular template engine for PHP.
+  is a popular template engine for PHP.
 - Supporting variable substitution, if, foreach, modifiers (pipes), and so on.
 
 ## Example?
@@ -21,6 +21,12 @@
 More examples on examples directory.
 
 ## Code?
+
+Just load `src/jarty.js` in your page.
+
+    <script src="jarty.js" type="text/javascript" charset="utf-8"></script>
+
+And you can write JavaScript like this...
 
     var template = Jarty.compile("Hello, {$thing}");
     var dictionary = { thing: "world" };
@@ -114,3 +120,14 @@ So all you do is to define a method in Jarty.Pipe.prototype!
 You can refer the current value by this.value in the method.
 Remember that you have to return `this` for the method chain.
 
+## Debugging
+
+Jarty throws a ParseError exception when a template has a syntax error.
+
+If you load `src/jarty.debugger.js` in your page, Jarty exceptions will be
+displayed as a styled popup on the top of the page.
+
+    <script src="jarty.js" type="text/javascript" charset="utf-8"></script>
+    <script src="jarty.debugger.js" type="text/javascript" charset="utf-8"></script>
+
+Remember that you must load `jarty,debugger.js` AFTER `jarty.js`.
