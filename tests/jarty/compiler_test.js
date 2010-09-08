@@ -7,7 +7,16 @@ JsUnitTest.Unit.Testcase.prototype.assertCompiled = function (expected, source, 
 		this.error(e);
 		return;
 	}
-//	this.info(source + " => " + compiled.toString());
+	if (/[?&]debug=1/.test(location.search)) {
+		var js = compiled.toString().replace(/\r?\n/g, "");
+		js = js.replace(/^function.*\(_\)\s*{\s*_\s*=\s*[^;]+;/i, "");
+		js = js.replace(/^\s*if\s*\(\s*Jarty.__globals\s*\)\s*{.+?}/i, "");
+		js = js.replace(/^\s*var\s*.+?;/i, "");
+		js = js.replace(/\s*return\s*r\.finish\(\);\s*}$/i, "");
+		js = js.replace(/;/g, ";\n");
+		js = js.replace(/^\s+|\s+$/mg, "");
+		this.info(source + "\n" + js.replace(/^/mg, "> "));
+	}
 	try {
 		actual = compiled(namespace);
 	} catch (e) {
@@ -86,10 +95,29 @@ new Test.Unit.Runner({
 		this.assertCompiled("abc", "{$foo.bar.baz}", { foo: { bar: { baz: "abc" } } });
 		this.assertCompiled("abc", "{$foo.$bar.baz}", { foo: { hoge: { baz: "abc" } }, bar: "hoge" });
 	},
+	testEmbedDottedNullReferenceReturnsEmptyString: function () {
+		this.assertCompiled("", "{$foo.bar}", { foo: null });
+		this.assertCompiled("", "{$foo.bar.baz}", { foo: { bar: null } });
+		this.assertCompiled("", "{$foo.$bar.baz}", { foo: null });
+		this.assertCompiled("", "{$foo.$bar.baz}", { foo: { hoge: null }, bar: "hoge" });
+		this.assertCompiled("", "{$foo.$bar.baz}", { foo: { hoge: { baz: "abc" } }, bar: null });
+	},
+	testEmbedDottedUndefinedReferenceReturnsEmptyString: function () {
+		this.assertCompiled("", "{$foo.bar}", { });
+		this.assertCompiled("", "{$foo.bar.baz}", { foo: { } });
+	},
 	testEmbedVariableWithCursors: function () {
 		this.assertCompiled("abc", "{$foo->bar}", { foo: { bar: "abc" } });
 		this.assertCompiled("abc", "{$foo->bar->baz}", { foo: { bar: { baz: "abc" } } });
 		this.assertCompiled("abc", "{$foo->$bar->baz}", { foo: { hoge: { baz: "abc" } }, bar: "hoge" });
+	},
+	testEmbedCursorNullReferenceReturnsEmptyString: function () {
+		this.assertCompiled("", "{$foo->bar}", { foo: null });
+		this.assertCompiled("", "{$foo->bar->baz}", { foo: { bar: null } });
+	},
+	testEmbedCursorUndefinedReferenceReturnsEmptyString: function () {
+		this.assertCompiled("", "{$foo->bar}", { });
+		this.assertCompiled("", "{$foo->bar->baz}", { foo: { } });
 	},
 	testEmbedVariableWithIndexer: function () {
 		this.assertCompiled("abc", "{$foo[bar]}", { foo: { bar: "abc" } });
@@ -119,6 +147,12 @@ new Test.Unit.Runner({
 		this.assertCompiled("abc", "{$foo('abc')}", { foo: function (a) { return a } });
 		this.assertCompiled("abc", "{$foo($bar)}", { foo: function (a) { return a }, bar: "abc" });
 		this.assertCompiled("abcdef", "{$foo($bar, \"def\")}", { foo: function (a, b) { return a + b }, bar: "abc" });
+	},
+	testEmbedVariableWithMethodCall: function () {
+		var klass = function (s) { this.s = s; };
+		klass.prototype.bar = function () { return this.s };
+		this.assertCompiled("abc", "{$foo.bar()}", { foo: new klass("abc") });
+		this.assertCompiled("abc", "{$foo.bar().bar()}", { foo: new klass(new klass("abc")) });
 	},
 	testEmbedVariableWithNestedFunctionCallFails: function () {
 		this.assertRaise("SyntaxError", function () {
@@ -261,6 +295,12 @@ new Test.Unit.Runner({
 		this.assertCompiled("def", "{if $foo && $bar}abc{else}def{/if}", { foo: true, bar: false });
 		this.assertCompiled("def", "{if $foo && $bar}abc{else}def{/if}", { foo: false, bar: true });
 		this.assertCompiled("def", "{if $foo && $bar}abc{else}def{/if}", { foo: false, bar: false });
+		this.assertCompiled("abc", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: true, bar: true, baz: true });
+		this.assertCompiled("def", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: true, bar: true, baz: false });
+		this.assertCompiled("def", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: true, bar: false, baz: true });
+		this.assertCompiled("def", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: true, bar: false, baz: false });
+		this.assertCompiled("def", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: false, bar: false, baz: false });
+		this.assertCompiled("def", "{if $foo && $bar && $baz}abc{else}def{/if}", { foo: false, bar: true, baz: true });
 		this.assertCompiled("abc", "{if $foo and $bar}abc{else}def{/if}", { foo: true, bar: true });
 	},
 	testIfOr: function () {
@@ -268,6 +308,11 @@ new Test.Unit.Runner({
 		this.assertCompiled("abc", "{if $foo || $bar}abc{else}def{/if}", { foo: true, bar: false });
 		this.assertCompiled("abc", "{if $foo || $bar}abc{else}def{/if}", { foo: false, bar: true });
 		this.assertCompiled("def", "{if $foo || $bar}abc{else}def{/if}", { foo: false, bar: false });
+		this.assertCompiled("abc", "{if $foo || $bar || $baz}abc{else}def{/if}", { foo: true, bar: true, baz: true });
+		this.assertCompiled("abc", "{if $foo || $bar || $baz}abc{else}def{/if}", { foo: true, bar: true, baz: false });
+		this.assertCompiled("abc", "{if $foo || $bar || $baz}abc{else}def{/if}", { foo: false, bar: false, baz: true });
+		this.assertCompiled("abc", "{if $foo || $bar || $baz}abc{else}def{/if}", { foo: true, bar: false, baz: false });
+		this.assertCompiled("def", "{if $foo || $bar || $baz}abc{else}def{/if}", { foo: false, bar: false, baz: false });
 		this.assertCompiled("abc", "{if $foo or $bar}abc{else}def{/if}", { foo: true, bar: true });
 	},
 	testIfNot: function () {
@@ -283,6 +328,16 @@ new Test.Unit.Runner({
 		this.assertCompiled("abc", "{if $foo == $bar}abc{/if}", { foo: 123, bar: 123 });
 		this.assertCompiled("", "{if $foo == 456}abc{/if}", { foo: 123 });
 		this.assertCompiled("abc", "{if $foo == 123 && $bar == 456}abc{/if}", { foo: 123, bar: 456 });
+	},
+	testIfStrictEqual: function () {
+		this.assertCompiled("abc", "{if $foo === 123}abc{/if}", { foo: 123 });
+		this.assertCompiled("", "{if $foo === 123}abc{/if}", { foo: "123" });
+		this.assertCompiled("", "{if $foo === '123'}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo === 'hoge'}abc{/if}", { foo: "hoge" });
+		this.assertCompiled("abc", "{if $foo === $bar}abc{/if}", { foo: 123, bar: 123 });
+		this.assertCompiled("", "{if $foo === $bar}abc{/if}", { foo: 123, bar: "123" });
+		this.assertCompiled("", "{if $foo === 456}abc{/if}", { foo: 123 });
+		this.assertCompiled("abc", "{if $foo === 123 && $bar == 456}abc{/if}", { foo: 123, bar: 456 });
 	},
 	testIfNotEqual: function () {
 		this.assertCompiled("", "{if $foo != 123}abc{/if}", { foo: 123 });

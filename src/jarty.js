@@ -28,7 +28,7 @@
 (function () {
 
 var Jarty = window.Jarty = {
-	version: '0.2.0',
+	version: '0.2.1',
 	debug: false,
 	compiler: null,
 	__globals: null,
@@ -699,6 +699,31 @@ Jarty.Namespace = function (dict) {
 		this[key] = dict[key];
 };
 
+Jarty.Getter = function (ns /* , keys... */) {
+	var obj = arguments[0], thisObj, lastObj, i = 1, l = arguments.length, key;
+	while (obj && i < l) {
+		key = arguments[i++];
+		if (key instanceof Array) {
+			if (obj instanceof Function) {
+				thisObj = lastObj;
+				lastObj = obj;
+				obj = obj.apply(thisObj, key);
+			} else {
+				obj = null;
+			}
+		} else {
+			if (key in obj) {
+				lastObj = obj;
+				obj = obj[key];
+			} else {
+				obj = null;
+			}
+		}
+	}
+	return obj;
+};
+
+
 var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"',
 	eSingleQuoteString = '\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'',
 	eString = '(?:' + eDoubleQuoteString + '|' + eSingleQuoteString + ')',
@@ -725,7 +750,7 @@ Jarty.Rules = {
 		enter: function (out) {
 			out.write("_=_||{};",
 				"if(Jarty.__globals){_=new Jarty.Namespace(_)}",
-				"var r=new Jarty.Runtime(_),p=Jarty.Pipe,f=Jarty.Function;");
+				"var g=Jarty.Getter,r=new Jarty.Runtime(_),p=Jarty.Pipe,f=Jarty.Function;");
 		},
 		leave: function (out) {
 			out.write("return r.finish();");
@@ -849,10 +874,16 @@ Jarty.Rules = {
 					this.transitTo("inEnvVar", matched[2], closePipe);
 					closePipe = undefined;
 				} else {
-					out.write("_[", Jarty.Utils.quote(matched[1]), "]");
+					out.write("g(_,", Jarty.Utils.quote(matched[1]));
 					if (matched[2]) { // suffix
-						this.transitTo("inVariableSuffix", matched[2], closePipe);
+						var oldClosePipe = closePipe;
+						this.transitTo("inVariableSuffix", matched[2], function (out) {
+							out.write(")");
+							if (oldClosePipe) oldClosePipe.call(this, out);
+						});
 						closePipe = undefined;
+					} else {
+						out.write(")");
 					}
 				}
 			} else if (matched[3]) { // string
@@ -897,9 +928,11 @@ Jarty.Rules = {
 			if (matched[1]) {
 				out.write(Jarty.Utils.quote(matched[1]));
 			} else if (matched[2]) {
-				out.write("_[", Jarty.Utils.quote(matched[2]), "]");
+				out.write("g(_,", Jarty.Utils.quote(matched[2]));
 				if (matched[3]) {
-					this.transitTo("inIndexer", matched[3]);
+					this.transitTo("inIndexer", matched[3], function (out) { out.write(")") });
+				} else {
+					out.write(")");
 				}
 			}
 		},
@@ -911,13 +944,13 @@ Jarty.Rules = {
 		search: new RegExp('^(?:(?:\\.|->)(\\w+)|(?:\\.|->)\\$(\\w+)(' + eIndexer + '*)|(' + eIndexer + ')|(' + eFuncCall + '))'),
 		found: function (out, matched) {
 			if (matched[1]) {
-				out.write("[", Jarty.Utils.quote(matched[1]), "]");
+				out.write(",", Jarty.Utils.quote(matched[1]));
 			} else if (matched[2]) {
-				out.write("[_[", Jarty.Utils.quote(matched[2]), "]");
+				out.write(",g(_,", Jarty.Utils.quote(matched[2]));
 				if (matched[3]) {
-					this.transitTo("inIndexer", matched[3], function (out) { out.write("]") });
+					this.transitTo("inIndexer", matched[3], function (out) { out.write(")") });
 				} else {
-					out.write("]");
+					out.write(")");
 				}
 			} else if (matched[4]) {
 				this.transitTo("inIndexer", matched[4]);
@@ -932,10 +965,8 @@ Jarty.Rules = {
 	inIndexer: {
 		search: /^\[\s*((?:[^\[\]]|\[[^\]]+\])+)\s*\]/,
 		found: function (out, matched) {
-			out.write("[");
-			this.transitTo("inValue", matched[1], function (out) {
-				out.write("]");
-			});
+			out.write(",");
+			this.transitTo("inValue", matched[1]);
 		},
 		notfound: function (out, extra) {
 			this.raiseParseError("invalid indexer");
@@ -944,9 +975,9 @@ Jarty.Rules = {
 	inFuncCall: {
 		search: /^\(\s*([^\)]*)\s*\)/,
 		found: function (out, matched) {
-			out.write("(");
+			out.write(",[");
 			this.transitTo("inFuncCallArgs", matched[1], function (out) {
-				out.write(")");
+				out.write("]");
 			});
 		},
 		notfound: function (out, extra) {
@@ -1051,7 +1082,7 @@ Jarty.Rules = {
 		}
 	},
 	inIfCondition: {
-		search: new RegExp("^\\s*(?:(\\(|\\)|&&|\\|\\||==|>=|<=|!=|[!><%+/*-])|(and)|(or)|(not)|(" + eValue + "))"),
+		search: new RegExp("^\\s*(?:(\\(|\\)|&&|\\|\\||===?|>=|<=|!=|[!><%+/*-])|(and)|(or)|(not)|(" + eValue + "))"),
 		found: function (out, matched) {
 			if (matched[1]) {
 				out.write(matched[1]);
