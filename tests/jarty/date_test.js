@@ -13,6 +13,12 @@ new Test.Unit.Runner({
 	testDateFormat: function () {
 		var d = new Date(2009, 8, 25, 12, 34, 56);
 		this.assertEqual("2009-09-25 12:34:56", Jarty.Date.format("%Y-%m-%d %H:%M:%S", d));
+	},
+
+	testDateFormatYear: function () {
+		var d = new Date(1999, 1, 1, 12, 34, 56);
+		this.assertEqual("99", Jarty.Date.format("%y", d));
+		this.assertEqual("1999", Jarty.Date.format("%Y", d));
 	}
 
 });
