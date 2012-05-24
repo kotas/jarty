@@ -8,6 +8,10 @@ new Test.Unit.Runner({
 	testDateParseParsesString: function () {
 		var d = Jarty.Date.parse("2009-02-14 08:31:30");
 		this.assertEqual(1234567890000, d.getTime());
+
+		// Check "09" is treated as "9" (bugfix)
+		d = Jarty.Date.parse("2009-09-01 00:00:00");
+		this.assertEqual(1251730800000, d.getTime());
 	},
 
 	testDateFormat: function () {
