@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="utf-8" />
+	<title>Jarty</title>
+	<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+<body>
+
+<div id="header">
+	<h1>Jarty</h1>
+	<p id="subtitle">Template Engine for JavaScript</p>
+</div>
+
+<div id="welcome">
+	<p>Welcome to Jarty project page!</p>
+	<p><a href="http://github.com/kotas/Jarty/">Jarty</a> is a Smarty-like template engine for JavaScript.</p>
+</div>
+
+<div id="contents">
+
+	<div id="menu">
+
+		<div id="download">
+			<p><a href="https://github.com/kotas/jarty/downloads" class="button">Download</a></p>
+			<p class="license">The MIT License</p>
+		</div>
+
+		<div id="examples" class="menulist">
+			<h2>Examples</h2>
+			<ul>
+				<li><a href="jarty/examples/simple.html">Simple</a></li>
+				<li><a href="jarty/examples/preview.html">Preview</a></li>
+			</ul>
+		</div>
+
+		<div id="links" class="menulist">
+			<h2>Links</h2>
+			<ul>
+				<li><a href="http://github.com/kotas/jarty/">GitHub</a></li>
+				<li><a href="jarty/tests/jarty.html">Tests</a></li>
+				<li><a href="jarty/tests/benchmark.html">Benchmark</a></li>
+			</ul>
+		</div>
+
+	</div>
+
+	<div id="codesample">
+		<pre><code>&quot;Hello, {$world}!&quot;
+↓
+jarty({ world: "Jarty" })
+↓
+&quot;Hello, Jarty!&quot;</code></pre>
+	</div>
+
+</div>
+
+<div id="footer">
+	<address>&copy; kotas 2009-2012</address>
+</div>
+
+</body>
+</html>

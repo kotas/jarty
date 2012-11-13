@@ -1,0 +1,157 @@
+
+body {
+	margin: 20px auto;
+	font-family: sans-serif;
+	width: 600px;
+	position: relative;
+}
+
+a {
+	color: #0060C0;
+	text-decoration: none;
+}
+a:visited {
+	color: #003090;
+}
+a:hover {
+	color: #E02060;
+	text-decoration: underline;
+}
+
+p {
+	margin: 0;
+}
+
+h1 {
+	margin: 0;
+	padding: 0;
+	color: #666666;
+	font-family: Georgia;
+	font-size: 100px;
+	line-height: 1;
+	position: relative;
+	z-index: 10;
+	text-align: right;
+}
+
+#subtitle {
+	position: relative;
+	z-index: 9;
+	text-align: left;
+	font-size: 16px;
+	font-weight: bold;
+	color: #AAAAAA;
+	margin-top: -50px;
+}
+
+#welcome {
+	background-color: #EFEFEF;
+	padding: 10px;
+	margin-top: 5px;
+	position: relative;
+	z-index: 5;
+}
+#welcome p {
+	font-size: 90%;
+	color: #666666;
+	line-height: 1.3;
+}
+
+#contents {
+	padding: 20px 25px;
+	/zoom: 1.0;
+}
+#contents:after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+#menu {
+	float: left;
+}
+
+#download a {
+	display: inline-block;
+	font-size: 20px;
+	font-weight: bold;
+	padding: 12px 18px;
+	line-height: 1;
+	color: #FFFFFF;
+	border-radius: 3px;
+	border-style: none;
+	text-shadow: 0 1px 0 #000000;
+	text-decoration: none;
+	background-color: #333333;
+	background-image: linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+	background-image: -moz-linear-gradient(top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, rgba(255, 255, 255, 0.5)), color-stop(1, rgba(255, 255, 255, 0)));
+	filter: progid:DXImageTransform.Microsoft.Gradient(StartColorStr="#88FFFFFF", EndColorStr="#00FFFFFF");
+}
+#download a:hover {
+	background-color: #000000;
+}
+#download .license {
+	font-size: 12px;
+	color: #999999;
+	margin-top: 5px;
+}
+
+#examples {
+	padding-top: 25px;
+}
+
+.menulist h2 {
+	margin: 0;
+	padding: 0;
+	font-size: 20px;
+	color: #666666;
+}
+
+.menulist ul {
+	margin: 5px 0 10px 0;
+	padding: 0;
+	position: relative;
+	margin-top: -20px;
+	margin-left: 120px;
+}
+.menulist li {
+	margin-bottom: 5px;
+	list-style-type: none;
+	font-size: 90%;
+}
+
+#codesample {
+	clear: right;
+	float: right;
+	background-color: #FFFFFF;
+	border: 2px solid #AAAAAA;
+	color: #000000;
+	text-align: center;
+	padding: 10px;
+}
+#codesample pre {
+	margin: 0;
+	padding: 0;
+}
+#codesample code {
+	margin: 0;
+	padding: 0;
+	font-size: 20px;
+	line-height: 1.5;
+}
+
+#footer {
+	padding: 10px;
+	margin-top: 20px;
+	background-color: #EFEFEF;
+	height: 160px;
+}
+#footer address {
+	font-style: normal;
+	font-size: 90%;
+	color: #666666;
+	line-height: 1.3;
+	text-align: center;
+}
+

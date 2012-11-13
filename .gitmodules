@@ -1,0 +1,3 @@
+[submodule "jarty"]
+	path = jarty
+	url = https://github.com/kotas/jarty.git
