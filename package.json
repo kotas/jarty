@@ -1,0 +1,19 @@
+{
+    "name"        : "jarty",
+    "version"     : "1.0.0",
+    "description" : "Smarty-like Template Engine for JavaScript",
+    "license"     : "MIT",
+    "author"      : "Kota Saito",
+    "homepage"    : "http://jarty.kotas.jp/",
+    "bugs"        : "https://github.com/kotas/jarty/issues",
+    "repository"  : {
+        "type" : "git",
+        "url"  : "git://github.com/kotas/jarty.git"
+    },
+    "devDependencies": {
+        "grunt"                    : "0.4.1",
+        "grunt-typescript"         : "*",
+        "grunt-contrib-uglify"     : "*",
+        "grunt-contrib-watch"      : "*"
+    }
+}
