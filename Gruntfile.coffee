@@ -13,10 +13,17 @@ module.exports = (grunt) ->
     concat:
       jarty:
         src: [
-          'src/intro.ts',
+          'src/intro.ts.txt',
+          'src/utils.ts',
+          'src/exceptions.ts',
+          'src/compiler/interfaces.ts',
+          'src/compiler/translator.ts',
+          'src/compiler/rules.ts',
+          'src/compiler/compiler.ts',
+          'src/runtime/runtime.ts',
+          'src/runtime/functions.ts',
           'src/jarty.ts',
-          'src/compiler.ts',
-          'src/outro.ts',
+          'src/outro.ts.txt',
         ]
         dest: 'compiled/jarty.ts'
 

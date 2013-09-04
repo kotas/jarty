@@ -1,6 +1,8 @@
-/// <reference path="./compiler.ts" />
-/// <reference path="./function.ts" />
-/// <reference path="./utils.ts" />
+/// <reference path="./interfaces.ts" />
+/// <reference path="./../utils.ts" />
+
+export declare var SpecialTags: { [index: string]: Rule };
+export declare var SpecialBarewords: { [index: string]: string };
 
 export module Rules {
     
@@ -10,7 +12,7 @@ export module Rules {
     var eSingleQuoteString = '\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'';
     var eString = '(?:' + eDoubleQuoteString + '|' + eSingleQuoteString + ')';
     var eNumber = '(?:[+-]?\\d+(?:\\.\\d+)?)';
-    var eSymbol = '\\w+';
+    var eSymbol = '[a-zA-Z_][a-zA-Z0-9_]*';
 
     var eFuncCall = '(?:\\([^\\)]*\\))';
     var eIndexer = '(?:\\[(?:[^\\[\\]]+|\\[[^\\]]+\\])+\\])';
@@ -28,43 +30,12 @@ export module Rules {
     var eOpenTag = '\\{\\s*(' + eSymbol + '.*?)\\s*\\}';
     var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
 
-    export var start: Rule;
-    export var inEmbedTag: Rule;
-    export var inOpenTag: Rule;
-    export var inOpenTagArgs: Rule;
-    export var inCloseTag: Rule;
-    export var inValue: Rule;
-    export var inEnvVar: Rule;
-    export var inVariableSuffix: Rule;
-    export var inIndexer: Rule;
-    export var inFuncCall: Rule;
-    export var inFuncCallArgs: Rule;
-    export var inString: Rule;
-    export var inPipe: Rule;
-    export var inPipeArgs: Rule;
-
-    export var inIfTag: Rule;
-    export var inElseTag: Rule;
-    export var inElseIfTag: Rule;
-    export var inEndIfTag: Rule;
-    export var inIfCondition: Rule;
-    export var inForeachTag: Rule;
-    export var inForeachElseTag: Rule;
-    export var inEndForeachTag: Rule;
-    export var inForTag: Rule;
-    export var inForElseTag: Rule;
-    export var inEndForTag: Rule;
-
-    export var SpecialTags: { [index: string]: Rule };
-    export var SpecialBarewords: { [index: string]: string };
-
-
-    start = {
+    export var start: Rule = {
         enter: (ctx: Context) => {
             ctx.write(
-                "c = c || {};",
-                "if (Jarty.__globals) { c = new Jarty.Namespace(c); }",
-                "var g = Jarty.Getter, r = new Jarty.Runtime(c), p = Jarty.Pipe, f = Jarty.Function;"
+                "ns = ns || {};",
+                "if (Jarty.__globals) { ns = new Jarty.Namespace(ns); }",
+                "var r = new Jarty.Runtime(ns);"
             );
         },
 
@@ -81,7 +52,7 @@ export module Rules {
             eCloseTag
         ].join("|")),
 
-        found: (ctx: Context, matched: string[], skipped: string) => {
+        found: (ctx: Context, matched: RegExpExecArray, skipped: string) => {
             if (skipped.length > 0) {
                 ctx.write("r.write(", quote(skipped), ");");
             }
@@ -105,7 +76,7 @@ export module Rules {
         }
     };
 
-    inEmbedTag = {
+    export var inEmbedTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("r.write(");
             ctx.nest(inValue);
@@ -116,25 +87,22 @@ export module Rules {
         }
     };
 
-    inOpenTag = {
-        search: new RegExp('^(' + eSymbol + ')(.*)$'),
+    export var inOpenTag: Rule = {
+        pattern: new RegExp('^(' + eSymbol + ')(.*)$'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             var method = matched[1].toLowerCase();
             if (SpecialTags[method]) {
                 ctx.nest(SpecialTags[method], matched[0]);
-            } else if (Function[method]) {
-                ctx.write("f[", quote(method), "]");
+            } else {
+                ctx.write("r.call(", quote(method), ",");
                 if (matched[2]) {
-                    ctx.write("(r,");
                     ctx.nest(inOpenTagArgs, matched[2], (ctx: Context) => {
                         ctx.write(");");
                     });
                 } else {
-                    ctx.write("(r, {});");
+                    ctx.write("{});");
                 }
-            } else {
-                ctx.raiseError("unknown tag: {" + method + "}");
             }
         },
 
@@ -143,7 +111,7 @@ export module Rules {
         }
     };
 
-    inOpenTagArgs = {
+    export var inOpenTagArgs: Rule = {
         enter: (ctx: Context) => {
             ctx.write("{");
         },
@@ -152,13 +120,13 @@ export module Rules {
             ctx.write("}");
         },
 
-        search: new RegExp('^\\s+(' + eSymbol + ')=(' + eValue + ')'),
+        pattern: new RegExp('^\\s+(' + eSymbol + ')=(' + eValue + ')'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             if (ctx.loopCount > 0) {
                 ctx.write(",");
             }
-            ctx.write(quote(matched[1]), ":");
+            ctx.write(matched[1], ":");
             ctx.nest(inValue, matched[2]);
         },
 
@@ -167,15 +135,15 @@ export module Rules {
         }
     };
 
-    inCloseTag = {
-        search: new RegExp('^(' + eSymbol + ')$'),
+    export var inCloseTag: Rule = {
+        pattern: new RegExp('^(' + eSymbol + ')$'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             var method = matched[1].toLowerCase();
             if (SpecialTags["/" + method]) {
                 ctx.nest(SpecialTags["/" + method], matched[0]);
             } else {
-                ctx.write("f[", quote(method + "Close"), "](r);");
+                ctx.write("r.call(", quote(method + "Close"), ");");
             }
         },
 
@@ -184,16 +152,16 @@ export module Rules {
         }
     };
 
-    inValue = {
-        search: new RegExp(eValue),
+    export var inValue: Rule = {
+        pattern: new RegExp(eValue),
 
-        found: function (ctx: Context, matched: string[]) {
-            var closePipe: Function;
+        found: function (ctx: Context, matched: RegExpExecArray) {
+            var closePipe: (ctx: Context) => void;
 
             if (matched[6]) { // has pipe
-                ctx.write("(new p(");
+                ctx.write("r.pipe(");
                 closePipe = (ctx: Context) => {
-                    ctx.write("))");
+                    ctx.write(")");
                     ctx.nest(inPipe, matched[6], (ctx: Context) => {
                         ctx.write(".valueOf()");
                     });
@@ -208,7 +176,7 @@ export module Rules {
                     ctx.nest(inEnvVar, matched[2], closePipe);
                     closePipe = undefined;
                 } else {
-                    ctx.write("g(c,", quote(matched[1]));
+                    ctx.write("r.get(", quote(matched[1]));
                     if (matched[2]) { // has variable suffix
                         var oldClosePipe = closePipe;
                         ctx.nest(inVariableSuffix, matched[2], (ctx: Context) => {
@@ -247,7 +215,7 @@ export module Rules {
         }
     };
 
-    inEnvVar = {
+    export var inEnvVar: Rule = {
         enter: (ctx: Context) => {
             ctx.write("r.getEnvVar([");
         },
@@ -256,16 +224,16 @@ export module Rules {
             ctx.write("])");
         },
 
-        search: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*))'),
+        pattern: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*))'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             if (ctx.loopCount > 0) {
                 ctx.write(",");
             }
-            if (matched[1]) {
+            if (matched[1]) { // property access (ex: .abc ->abc)
                 ctx.write(quote(matched[1]));
-            } else if (matched[2]) {
-                ctx.write("g(c,", quote(matched[2]));
+            } else if (matched[2]) { // referenced property access (ex: .$abc ->$abc)
+                ctx.write("r.get(", quote(matched[2]));
                 if (matched[3]) {
                     ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")") });
                 } else {
@@ -279,22 +247,22 @@ export module Rules {
         }
     };
 
-    inVariableSuffix = {
-        search: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)|(' + eIndexer + ')|(' + eFuncCall + '))'),
+    export var inVariableSuffix: Rule = {
+        pattern: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)|(' + eIndexer + ')|(' + eFuncCall + '))'),
 
-        found: (ctx: Context, matched: string[]) => {
-            if (matched[1]) {
+        found: (ctx: Context, matched: RegExpExecArray) => {
+            if (matched[1]) { // property access (ex: $foo.abc $foo->abc)
                 ctx.write(",", quote(matched[1]));
-            } else if (matched[2]) {
-                ctx.write(",g(c,", quote(matched[2]));
+            } else if (matched[2]) { // referenced property access (ex: $foo.$abc $foo->$abc)
+                ctx.write(",r.get(", quote(matched[2]));
                 if (matched[3]) {
                     ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")") });
                 } else {
                     ctx.write(")");
                 }
-            } else if (matched[4]) {
+            } else if (matched[4]) { // indexer access (ex: $foo[123] $foo["abc"])
                 ctx.nest(inIndexer, matched[4]);
-            } else {
+            } else { // function call (ex: $foo(1,2,3))
                 ctx.nest(inFuncCall, matched[5]);
             }
         },
@@ -304,10 +272,10 @@ export module Rules {
         }
     };
 
-    inIndexer = {
-        search: /^\[\s*((?:[^\[\]]|\[[^\]]+\])+)\s*\]/,
+    export var inIndexer: Rule = {
+        pattern: /^\[\s*((?:[^\[\]]|\[[^\]]+\])+)\s*\]/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.write(",");
             ctx.nest(inValue, matched[1]);
         },
@@ -317,10 +285,10 @@ export module Rules {
         }
     };
 
-    inFuncCall = {
-        search: /^\(\s*([^\)]*)\s*\)/,
+    export var inFuncCall: Rule = {
+        pattern: /^\(\s*([^\)]*)\s*\)/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.write(",[");
             ctx.nest(inFuncCallArgs, matched[1], (ctx: Context) => {
                 ctx.write("]");
@@ -332,10 +300,10 @@ export module Rules {
         }
     };
 
-    inFuncCallArgs = {
-        search: new RegExp('^(\\,?)\\s*(' + eValue + ')'),
+    export var inFuncCallArgs: Rule = {
+        pattern: new RegExp('^(\\,?)\\s*(' + eValue + ')'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             if (matched[1]) {
                 ctx.write(",");
             }
@@ -347,10 +315,10 @@ export module Rules {
         }
     };
 
-    inString = {
-        search: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|^`(' + eValue + ')`'),
+    export var inString: Rule = {
+        pattern: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|^`(' + eValue + ')`'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             if (ctx.loopCount > 0) {
                 ctx.write("+");
             }
@@ -362,12 +330,12 @@ export module Rules {
         }
     };
 
-    inPipe = {
-        search: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
+    export var inPipe: Rule = {
+        pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             var method = matched[1].replace(/_(.)/g, ($0, $1) => { return $1.toUpperCase() });
-            ctx.write("[", quote(method), "](r");
+            ctx.write(".", method, "(r");
             if (matched[2]) {
                 ctx.nest(inPipeArgs, matched[2], (ctx: Context) => { ctx.write(")") });
             } else {
@@ -375,26 +343,26 @@ export module Rules {
             }
         },
 
-        notfound: (ctx: Context) {
+        notfound: (ctx: Context) => {
             ctx.raiseError("invalid pipe");
         }
     };
 
-    inPipeArgs = {
-        search: new RegExp('^:(' + eScalar + ')'),
+    export var inPipeArgs: Rule = {
+        pattern: new RegExp('^:(' + eScalar + ')'),
 
-        found: (ctx: Context, matched: string[]) {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.write(",");
             ctx.nest(inValue, matched[1]);
         },
 
-        notfound: (ctx: Context) {
+        notfound: (ctx: Context) => {
             ctx.raiseError("invalid pipe argument");
         }
     };
 
 
-    inIfTag = {
+    export var inIfTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("if (");
         },
@@ -403,9 +371,9 @@ export module Rules {
             ctx.write(") {");
         },
 
-        search: /^if\s+(.+)$/,
+        pattern: /^if\s+(.+)$/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.nest(inIfCondition, matched[1]);
         },
 
@@ -414,13 +382,13 @@ export module Rules {
         }
     };
 
-    inElseTag = {
+    export var inElseTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("} else {");
         }
     };
 
-    inElseIfTag = {
+    export var inElseIfTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("} else if (");
         },
@@ -429,9 +397,9 @@ export module Rules {
             ctx.write(") {");
         },
 
-        search: /^elseif\s+(.+)$/,
+        pattern: /^elseif\s+(.+)$/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.nest(inIfCondition, matched[1]);
         },
 
@@ -440,16 +408,16 @@ export module Rules {
         }
     };
 
-    inEndIfTag = {
+    export var inEndIfTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("}");
         }
     };
 
-    inIfCondition = {
-        search: new RegExp('^\\s*(?:(' + eOperators + ')|(and)|(or)|(not)|(' + eValue + '))'),
+    export var inIfCondition: Rule = {
+        pattern: new RegExp('^\\s*(?:(' + eOperators + ')|(and)|(or)|(not)|(' + eValue + '))'),
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             if (matched[1]) {
                 ctx.write(matched[1]);
             } else if (matched[2]) {
@@ -468,10 +436,10 @@ export module Rules {
         }
     };
 
-    inForeachTag = {
-        search: /^foreach(\s+.+)$/,
+    export var inForeachTag: Rule = {
+        pattern: /^foreach(\s+.+)$/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.write("r.foreach(");
             ctx.nest(inOpenTagArgs, matched[1], (ctx: Context) => {
                 ctx.write(", function () {");
@@ -483,22 +451,22 @@ export module Rules {
         }
     };
 
-    inForeachElseTag = {
+    export var inForeachElseTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("}, function () {");
         }
     };
 
-    inEndForeachTag = {
+    export var inEndForeachTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("});");
         }
     };
 
-    inForTag = {
-        search: /^for(\s+.+)$/,
+    export var inForTag: Rule = {
+        pattern: /^for(\s+.+)$/,
 
-        found: (ctx: Context, matched: string[]) => {
+        found: (ctx: Context, matched: RegExpExecArray) => {
             ctx.write("r.for_(");
             ctx.nest(inOpenTagArgs, matched[1], (ctx: Context) => {
                 ctx.write(", function () {");
@@ -510,38 +478,37 @@ export module Rules {
         }
     };
 
-    inForElseTag = {
+    export var inForElseTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("}, function () {");
         }
     };
 
-    inEndForTag = {
+    export var inEndForTag: Rule = {
         enter: (ctx: Context) => {
             ctx.write("});");
         }
     };
 
-
-    SpecialTags = {
-        "if": inIfTag,
-        "else": inElseTag,
-        "elseif": inElseIfTag,
-        "/if": inEndIfTag,
-        "foreach": inForeachTag,
-        "foreachelse": inForeachElseTag,
-        "/foreach": inEndForeachTag,
-        "for": inForTag,
-        "forelse": inForElseTag,
-        "/for": inEndForTag
-    };
-
-    SpecialBarewords = {
-        "true": "true",
-        "false": "false",
-        "null": "null",
-        "undefined": "undefined",
-        "NaN": "NaN"
-    };
-
 }
+
+export var SpecialTags: { [index: string]: Rule } = {
+    "if":          Rules.inIfTag,
+    "else":        Rules.inElseTag,
+    "elseif":      Rules.inElseIfTag,
+    "/if":         Rules.inEndIfTag,
+    "foreach":     Rules.inForeachTag,
+    "foreachelse": Rules.inForeachElseTag,
+    "/foreach":    Rules.inEndForeachTag,
+    "for":         Rules.inForTag,
+    "forelse":     Rules.inForElseTag,
+    "/for":        Rules.inEndForTag
+};
+
+export var SpecialBarewords: { [index: string]: string } = {
+    "true":      "true",
+    "false":     "false",
+    "null":      "null",
+    "undefined": "undefined",
+    "NaN":       "NaN"
+};

@@ -1,18 +1,18 @@
 
 
-interface Foreach {
-    show: bool;
+export interface Foreach {
+    show: boolean;
     total: number;
-    first: bool;
-    last: bool;
+    first: boolean;
+    last: boolean;
     index: number;
     iteration: number;
 }
 
-interface Counter {
+export interface Counter {
     count: number;
     skip: number;
-    upward: bool;
+    upward: boolean;
 }
 
 export class Environment {

@@ -1,6 +1,9 @@
-export module Function {
+/// <reference path="./runtime.ts" />
+/// <reference path="./../utils.ts" />
 
-    interface Parameters {
+export module Functions {
+
+    export interface Parameters {
         [index: string]: string;
     }
 
@@ -44,7 +47,7 @@ export module Function {
         var equation = Utils.stringify(params['equation']);
         var answer: string;
         try {
-            answer = stringify(eval("with (params) { with (Math) { " + equation + " } }"));
+            answer = Utils.stringify(eval("with (params) { with (Math) { " + equation + " } }"));
         } catch (e) {
             runtime.raiseError("math: invalid equation: " + (e.message || e));
         }
@@ -71,10 +74,10 @@ export module Function {
         }
 
         if (params['start'] !== undefined) {
-            counter.count = params['start'] + 0;
+            counter.count = parseInt(params['start']) || 0;
         }
         if (params['skip'] !== undefined) {
-            counter.skip = params['skip'] + 0;
+            counter.skip = parseInt(params['skip']) || 0;
         }
         if (params['direction'] !== undefined) {
             counter.upward = (params['direction'] == "up");
@@ -84,7 +87,7 @@ export module Function {
             counter.count += counter.skip * (counter.upward ? +1 : -1);
         }
         if (params['print'] || params['print'] === undefined) {
-            runtime.write(counter.count);
+            runtime.write(counter.count.toString());
         }
         if (params['assign']) {
             runtime.dict[params['assign']] = counter.count;
