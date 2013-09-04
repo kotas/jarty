@@ -1,38 +1,39 @@
 module.exports = (grunt) ->
-
-  grunt.initConfig {
-    pkg: grunt.file.readJSON('package.json')
+  grunt.initConfig
+    pkg: grunt.file.readJSON 'package.json'
 
     typescript:
       jarty:
-        src:  ['src/**/*.ts']
+        src:  ['compiled/jarty.ts']
         dest: 'compiled/jarty.js'
         options:
           sourcemap: true
           declaration: true
 
+    concat:
+      jarty:
+        src: [
+          'src/jarty/intro.ts',
+          'src/jarty/jarty.ts',
+          'src/jarty/compiler.ts',
+          'src/jarty/outro.ts',
+        ]
+        dest: 'compiled/jarty.ts'
+
     uglify:
       dist:
         files:
-          'dist/jarty.min.js': ['compiled/jarty.js']
+          'compiled/jarty.min.js': ['compiled/jarty.js']
 
     watch:
       files: 'src/**/*.ts',
-      tasks: ['typescript']
-  }
+      tasks: ['compile']
 
-  grunt.loadNpmTasks('grunt-typescript')
-  grunt.loadNpmTasks('grunt-contrib-uglify')
-  grunt.loadNpmTasks('grunt-contrib-watch')
+  grunt.loadNpmTasks 'grunt-typescript'
+  grunt.loadNpmTasks 'grunt-contrib-concat'
+  grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
 
-  grunt.registerTask('compile', ['typescript'])
-
-  grunt.registerTask('default', [
-    'compile'
-    'watch'
-  ])
-
-  grunt.registerTask('release', [
-    'compile'
-    'uglify:dist'
-  ])
+  grunt.registerTask 'compile', ['concat:jarty', 'typescript:jarty']
+  grunt.registerTask 'default', ['compile']
+  grunt.registerTask 'release', ['compile', 'uglify']

@@ -13,6 +13,7 @@
     "devDependencies": {
         "grunt"                    : "0.4.1",
         "grunt-typescript"         : "*",
+        "grunt-contrib-concat"     : "*",
         "grunt-contrib-uglify"     : "*",
         "grunt-contrib-watch"      : "*"
     }
