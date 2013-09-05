@@ -8,34 +8,56 @@ export module Rules {
     
     var quote = Utils.quote;
 
+    // literal string with double-quotes  ex: "abc"
     var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"';
+    // literal string with single-quotes  ex: 'abc'
     var eSingleQuoteString = '\'[^\'\\\\]*(?:\\\\.[^\'\\\\]*)*\'';
+    // literal string  ex: "abc" or 'abc'
     var eString = '(?:' + eDoubleQuoteString + '|' + eSingleQuoteString + ')';
+    // literal number  ex: 123 -3.14
     var eNumber = '(?:[+-]?\\d+(?:\\.\\d+)?)';
+    // symbol  ex: abc
     var eSymbol = '[a-zA-Z_][a-zA-Z0-9_]*';
 
+    // function call suffix  ex:  (foo, bar)
     var eFuncCall = '(?:\\([^\\)]*\\))';
+    // indexer  ex: [abc]  [123]
     var eIndexer = '(?:\\[(?:[^\\[\\]]+|\\[[^\\]]+\\])+\\])';
+    // variable suffix  ex: .abc  ->abc  .$abc  ->$abc  [abc]  (abc)
     var eVariableSuffix = '(?:(?:\\.|->)' + eSymbol + '|(?:\\.|->)\\$' + eSymbol + eIndexer + '*|' + eIndexer + '|' + eFuncCall + ')';
+    // variable reference  ex:  $abc  $abc[123]  $abc.def
+    // $1 = variable name, $2 = variable suffix
     var eVariable = '(?:\\$(' + eSymbol + ')(' + eVariableSuffix + '*))';
+    // scalar  ex:  $abc  "abc"  123  abc
+    // $1 = variable name, $2 = variable suffix, $3 = literal string, $4 = literal number, $5 = symbol
     var eScalar = '(?:' + eVariable + '|(' + eString + ')|(' + eNumber + ')|(' + eSymbol + '))';
+    // pipe suffix  ex:  |foo  |@bar  |foo:$bar:123
+    // $1 = pipe parameters
     var ePipe = '(?:\\|@?' + eSymbol + '(?::' + eScalar + ')*)';
+    // value  ex: $abc[def]|ghi:jkl|hij:123
+    // $1 - $5 = same as eScalar, $6 = pipes
     var eValue = eScalar + '(' + ePipe + '*)';
+    // operators  ex: ( && || == )
     var eOperators = '(?:\\(|\\)|&&|\\|\\||===?|>=|<=|!=|[!><%+/*-])';
 
+    // comment tag  ex: {* foo bar *}
     var eCommentTag = '\\{\\*(.*?)\\*\\}';
+    // literal block  ex:  {literal} abc {/literal}
     var eLiteralBlock = '\\{\\s*literal\\s*\\}(.*?)\\{\\s*/literal\\s*\\}';
+    // javascript block  ex:  {javascript} alert(123); {/javascript}
     var eJavaScriptBlock = '\\{\\s*javascript\\s*\\}(.*?)\\{\\s*/javascript\\s*\\}';
+    // variable embed tag  ex:  {$abc}  {$foo.bar|baz}
     var eEmbedTag = '\\{\\s*(\\$' + eSymbol + '.*?)\\s*\\}';
+    // block open tag  ex: {foo}  {bar baz=123}
     var eOpenTag = '\\{\\s*(' + eSymbol + '.*?)\\s*\\}';
+    // block close tag  ex:  {/foo}  {/bar}
     var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
 
     export var start: Rule = {
         enter: (ctx: Context) => {
             ctx.write(
-                "ns = ns || {};",
-                "if (Jarty.__globals) { ns = new Jarty.Namespace(ns); }",
-                "var r = new Jarty.Runtime(ns);"
+                "var Jarty = arguments.callee.__jarty__;" +
+                "var r = new Jarty.Runtime(dict || {});"
             );
         },
 
@@ -56,6 +78,7 @@ export module Rules {
             if (skipped.length > 0) {
                 ctx.write("r.write(", quote(skipped), ");");
             }
+
             if (matched[1]) { // Comment Tag
                 /* skip */
             } else if (matched[2]) { // Literal Block
@@ -169,7 +192,7 @@ export module Rules {
             }
 
             if (matched[1]) { // variable
-                if (matched[1] == "smarty" || matched[1] == "jarty") { // special variable
+                if (matched[1] === "smarty" || matched[1] === "jarty") { // special variable
                     if (!matched[2]) {
                         ctx.raiseError("$" + matched[1] + " must be followed by a property name");
                     }
@@ -217,11 +240,11 @@ export module Rules {
 
     export var inEnvVar: Rule = {
         enter: (ctx: Context) => {
-            ctx.write("r.getEnvVar([");
+            ctx.write("r.getEnvVar(");
         },
 
         leave: (ctx: Context) => {
-            ctx.write("])");
+            ctx.write(")");
         },
 
         pattern: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*))'),
@@ -235,7 +258,7 @@ export module Rules {
             } else if (matched[2]) { // referenced property access (ex: .$abc ->$abc)
                 ctx.write("r.get(", quote(matched[2]));
                 if (matched[3]) {
-                    ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")") });
+                    ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")"); });
                 } else {
                     ctx.write(")");
                 }
@@ -248,7 +271,11 @@ export module Rules {
     };
 
     export var inVariableSuffix: Rule = {
-        pattern: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)|(' + eIndexer + ')|(' + eFuncCall + '))'),
+        pattern: new RegExp([
+            '^(?:(?:\\.|->)(' + eSymbol + ')',
+            '(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)',
+            '(' + eIndexer + ')|(' + eFuncCall + '))'
+        ].join('|')),
 
         found: (ctx: Context, matched: RegExpExecArray) => {
             if (matched[1]) { // property access (ex: $foo.abc $foo->abc)
@@ -256,7 +283,7 @@ export module Rules {
             } else if (matched[2]) { // referenced property access (ex: $foo.$abc $foo->$abc)
                 ctx.write(",r.get(", quote(matched[2]));
                 if (matched[3]) {
-                    ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")") });
+                    ctx.nest(inIndexer, matched[3], (ctx: Context) => { ctx.write(")"); });
                 } else {
                     ctx.write(")");
                 }
@@ -334,10 +361,10 @@ export module Rules {
         pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
         found: (ctx: Context, matched: RegExpExecArray) => {
-            var method = matched[1].replace(/_(.)/g, ($0, $1) => { return $1.toUpperCase() });
+            var method = matched[1].replace(/_(.)/g, ($0, $1) => { return $1.toUpperCase(); });
             ctx.write(".", method, "(r");
             if (matched[2]) {
-                ctx.nest(inPipeArgs, matched[2], (ctx: Context) => { ctx.write(")") });
+                ctx.nest(inPipeArgs, matched[2], (ctx: Context) => { ctx.write(")"); });
             } else {
                 ctx.write(")");
             }

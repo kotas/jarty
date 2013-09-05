@@ -69,16 +69,17 @@ class TranslatorScope implements Scope {
     }
 
     raiseError(message: string): void {
-        throw new JartySyntaxError("Jarty parse error: " + message, this.stack.top.toErrorPosition());
+        throw new SyntaxError("Jarty parse error: " + message, this.stack.top.toErrorPosition());
     }
 
     toErrorPosition(): ErrorPosition {
         var start = this.source.lastIndexOf("\n", this.index) + 1;
         var end = this.source.indexOf("\n", this.index);
+        var breaks = this.source.substr(0, start).match(/\n/g);
         return {
             col: this.index - start,
-            row: this.source.substr(0, start).match(/\n/g).length,
-            line: this.source.substring(start, end),
+            row: breaks ? breaks.length : 1,
+            line: this.source.substring(start, end === -1 ? this.source.length : end),
             source: this.source
         };
     }
@@ -140,7 +141,7 @@ export class Translator {
             }
             scope.loopCount++;
         }
-        if (scope === stack.top && source.length == 0) {
+        if (scope === stack.top && source.length === 0) {
             return this.stack.popScope();
         }
 

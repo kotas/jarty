@@ -1,4 +1,5 @@
 /// <reference path="./compiler/compiler.ts" />
+/// <reference path="./runtime/runtime.ts" />
 
 export var version = '1.0.0';
 

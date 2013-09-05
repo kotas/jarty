@@ -6,7 +6,7 @@ module Utils {
 
     export function zeroPad(num: number, width: number, radix: number = 10) {
         var s = num.toString(radix);
-        while (s.length < width) s = "0" + s;
+        while (s.length < width) { s = "0" + s; }
         return s.toUpperCase();
     }
 

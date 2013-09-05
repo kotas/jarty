@@ -1,48 +1,46 @@
-/// <reference path="./runtime.ts" />
+/// <reference path="./interfaces.ts" />
 /// <reference path="./../utils.ts" />
 
 export module Functions {
 
-    export interface Parameters {
-        [index: string]: string;
-    }
-
-    export function ldelim(runtime: Runtime): void {
+    export var ldelim: TagFunction = (runtime: RuntimeContext): void => {
         runtime.write("{");
-    }
+    };
 
-    export function rdelim(runtime: Runtime): void {
+    export var rdelim: TagFunction = (runtime: RuntimeContext): void => {
         runtime.write("}");
-    }
+    };
 
-    export function assign(runtime: Runtime, params: Parameters): void {
+    export var assign: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
         if (!params['var']) {
             runtime.raiseError("assign: `var` is not given");
         }
-        runtime.dict[ params['var'] ] = params['value'];
-    }
+        runtime.set(params['var'], params['value']);
+    };
 
-    export function capture(runtime: Runtime, params: Parameters): void {
+    export var capture: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
         runtime.startCapture(params['name'] || 'default', params['assign']);
-    }
+    };
 
-    export function captureClose(runtime: Runtime): void {
+    export var captureClose: TagFunction = (runtime: RuntimeContext): void => {
         runtime.endCapture();
-    }
+    };
 
-    export function strip(runtime: Runtime): void {
+    export var strip: TagFunction = (runtime: RuntimeContext): void => {
         runtime.startStrip();
-    }
+    };
 
-    export function stripClose(runtime: Runtime): void {
+    export var stripClose: TagFunction = (runtime: RuntimeContext): void => {
         runtime.endStrip();
-    }
+    };
 
-    export function math(runtime: Runtime, params: Parameters): void {
-        if (!params['equation'])
+    export var math: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
+        if (!params['equation']) {
             runtime.raiseError("math: `equation` is not given");
-        if (params['format'])
+        }
+        if (params['format']) {
             runtime.raiseError("math: `format` is not implemented");
+        }
 
         var equation = Utils.stringify(params['equation']);
         var answer: string;
@@ -53,13 +51,13 @@ export module Functions {
         }
 
         if (params['assign']) {
-            runtime.dict[params['assign']] = answer;
+            runtime.set(params['assign'], answer);
         } else {
             runtime.write(answer);
         }
-    }
+    };
 
-    export function counter(runtime: Runtime, params: Parameters): void {
+    export var counter: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
         var name: string = params['name'] || "default";
         var counter = runtime.env.counters[name];
         var init = false;
@@ -74,13 +72,13 @@ export module Functions {
         }
 
         if (params['start'] !== undefined) {
-            counter.count = parseInt(params['start']) || 0;
+            counter.count = parseInt(params['start'], 10) || 0;
         }
         if (params['skip'] !== undefined) {
-            counter.skip = parseInt(params['skip']) || 0;
+            counter.skip = parseInt(params['skip'], 10) || 0;
         }
         if (params['direction'] !== undefined) {
-            counter.upward = (params['direction'] == "up");
+            counter.upward = (params['direction'] === "up");
         }
 
         if (params['start'] === undefined && !init) {
@@ -90,8 +88,8 @@ export module Functions {
             runtime.write(counter.count.toString());
         }
         if (params['assign']) {
-            runtime.dict[params['assign']] = counter.count;
+            runtime.set(params['assign'], counter.count);
         }
-    }
+    };
 
 }
