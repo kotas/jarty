@@ -1,12 +1,14 @@
 module Utils {
 
-    export function stringify(value: any): string {
+    export function stringify(value:any):string {
         return (value === null || value === undefined) ? "" : String(value);
     }
 
-    export function zeroPad(num: number, width: number, radix: number = 10) {
+    export function zeroPad(num:number, width:number, radix:number = 10) {
         var s = num.toString(radix);
-        while (s.length < width) { s = "0" + s; }
+        while (s.length < width) {
+            s = "0" + s;
+        }
         return s.toUpperCase();
     }
 
@@ -19,8 +21,8 @@ module Utils {
         '\\': '\\\\'
     };
 
-    export function quote(value: any): string {
-        var s = stringify(value).replace(/[\x00-\x1f\\]/g, (chr: string) => {
+    export function quote(value:any):string {
+        var s = stringify(value).replace(/[\x00-\x1f\\]/g, (chr:string) => {
             return quoteMap[chr] || '\\u00' + zeroPad(chr.charCodeAt(0), 2, 16);
         });
         return '"' + s.replace(/"/g, '\\"') + '"';

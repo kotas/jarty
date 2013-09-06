@@ -6,7 +6,7 @@ module spec {
     var expect = chai.expect;
 
     describe('Jarty Syntax', () => {
-        function render(source: any, dict?: Object): string {
+        function render(source:any, dict?:Object):string {
             return Jarty.compile(source)(dict);
         }
 

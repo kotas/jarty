@@ -6,9 +6,9 @@ module spec {
     var expect = chai.expect;
 
     describe('Jarty.Compiler', () => {
-        var compiler: Jarty.Compiler;
+        var compiler:Jarty.Compiler;
 
-        function compile(source: any, dict?: Object): string {
+        function compile(source:any, dict?:Object):string {
             return compiler.compileToFunction(source)(dict);
         }
 

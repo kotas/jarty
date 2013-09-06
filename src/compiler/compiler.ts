@@ -3,21 +3,21 @@
 /// <reference path="./translator.ts" />
 /// <reference path="../utils.ts" />
 
-declare var Jarty: any;
+declare var Jarty:any;
 
 export class Compiler {
 
-    private rule: Rule;
+    private rule:Rule;
 
-    constructor(rule?: Rule) {
+    constructor(rule?:Rule) {
         this.rule = rule || Rules.start;
     }
 
-    compileToString(source: string): string {
+    compileToString(source:string):string {
         source = Utils.stringify(source);
-        var script: string = "";
-        var buffer: Buffer = {
-            write: (...strs: string[]) => {
+        var script:string = "";
+        var buffer:Buffer = {
+            write: (...strs:string[]) => {
                 for (var i = 0; i < strs.length; i++) {
                     script += strs[i];
                 }
@@ -28,14 +28,14 @@ export class Compiler {
         return script;
     }
 
-    compileToFunction(source: string): Function {
+    compileToFunction(source:string):Function {
         var script = this.compileToString(source);
         try {
             var compiled = new Function("dict", script);
         } catch (e) {
             throw new SyntaxError(
                 "Jarty compile error: " + (e.message || e) + "\n" +
-                (script.length > 60 ? script.substr(0, 60) + "..." : script)
+                    (script.length > 60 ? script.substr(0, 60) + "..." : script)
             );
         }
         compiled["__jarty__"] = Jarty;

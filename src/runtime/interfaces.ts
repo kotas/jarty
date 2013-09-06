@@ -1,4 +1,3 @@
-
 export interface Dictionary {
     [index: string]: any;
 }
@@ -8,7 +7,7 @@ export interface TagParameters {
 }
 
 export interface TagFunction {
-    (runtime: RuntimeContext, params: TagParameters): void;
+    (runtime:RuntimeContext, params:TagParameters): void;
 }
 
 export interface PipeStream {
@@ -16,7 +15,7 @@ export interface PipeStream {
 }
 
 export interface PipeFunction {
-    (runtime: RuntimeContext, value: any): PipeStream;
+    (runtime:RuntimeContext, value:any): PipeStream;
 }
 
 export interface Foreach {
@@ -42,17 +41,17 @@ export interface RuntimeEnvironment {
 
 export interface RuntimeContext {
     env: RuntimeEnvironment;
-    write(str: string): void;
+    write(str:string): void;
     finish(): string;
-    raiseError(message: string): void;
-    set(key: string, value: any): void;
-    get(key: string, ...suffixes: any[]): any;
-    getEnvVar(...keys: string[]): any;
-    pipe(value: any): PipeStream;
-    call(method: string, args?: TagParameters): any;
-    foreach(params: TagParameters, yieldFunc: () => void, elseFunc?: () => void): void;
-    for_(params: TagParameters, yieldFunc: () => void, elseFunc?: () => void): void;
-    startCapture(name: string, assign: string): void;
+    raiseError(message:string): void;
+    set(key:string, value:any): void;
+    get(key:string, ...suffixes:any[]): any;
+    getEnvVar(...keys:string[]): any;
+    pipe(value:any): PipeStream;
+    call(method:string, args?:TagParameters): any;
+    foreach(params:TagParameters, yieldFunc:() => void, elseFunc?:() => void): void;
+    for_(params:TagParameters, yieldFunc:() => void, elseFunc?:() => void): void;
+    startCapture(name:string, assign:string): void;
     endCapture(): void;
     startStrip(): void;
     endStrip(): void;

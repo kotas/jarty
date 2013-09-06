@@ -1,6 +1,6 @@
 /// <reference path="./interfaces.ts" />
 
-var GlobalNamespace = function (dict: Dictionary): void {
+var GlobalNamespace = function (dict:Dictionary):void {
     for (var key in dict) {
         if (dict.hasOwnProperty(key)) {
             this[key] = dict[key];
@@ -9,19 +9,19 @@ var GlobalNamespace = function (dict: Dictionary): void {
 };
 
 export interface Global {
-    set(key: string, value: any): void;
-    set(dict: Dictionary): void;
-    get(key: string): any;
-    remove(key: string): void;
+    set(key:string, value:any): void;
+    set(dict:Dictionary): void;
+    get(key:string): any;
+    remove(key:string): void;
     clear(): void;
-    wrap(dict: Dictionary): Dictionary;
+    wrap(dict:Dictionary): Dictionary;
 }
 
-var globalUsed: boolean = false;
+var globalUsed:boolean = false;
 
-export var global: Global = {
+export var global:Global = {
 
-    set: (...args: any[]): void => {
+    set: (...args:any[]):void => {
         globalUsed = true;
         if (args.length === 1) {
             var dict = args[0];
@@ -35,20 +35,20 @@ export var global: Global = {
         }
     },
 
-    get: (key: string): any => {
+    get: (key:string):any => {
         return GlobalNamespace.prototype[key];
     },
 
-    remove: (key: string): void => {
+    remove: (key:string):void => {
         delete GlobalNamespace.prototype[key];
     },
 
-    clear: (): void => {
+    clear: ():void => {
         globalUsed = false;
         GlobalNamespace.prototype = {};
     },
 
-    wrap: (dict: Dictionary): Dictionary => {
+    wrap: (dict:Dictionary):Dictionary => {
         return globalUsed ? <Dictionary> new GlobalNamespace(dict) : dict;
     }
 

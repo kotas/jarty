@@ -3,38 +3,38 @@
 
 export module Functions {
 
-    export var ldelim: TagFunction = (runtime: RuntimeContext): void => {
+    export var ldelim:TagFunction = (runtime:RuntimeContext):void => {
         runtime.write("{");
     };
 
-    export var rdelim: TagFunction = (runtime: RuntimeContext): void => {
+    export var rdelim:TagFunction = (runtime:RuntimeContext):void => {
         runtime.write("}");
     };
 
-    export var assign: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
+    export var assign:TagFunction = (runtime:RuntimeContext, params:TagParameters):void => {
         if (!params['var']) {
             runtime.raiseError("assign: `var` is not given");
         }
         runtime.set(params['var'], params['value']);
     };
 
-    export var capture: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
+    export var capture:TagFunction = (runtime:RuntimeContext, params:TagParameters):void => {
         runtime.startCapture(params['name'] || 'default', params['assign']);
     };
 
-    export var captureClose: TagFunction = (runtime: RuntimeContext): void => {
+    export var captureClose:TagFunction = (runtime:RuntimeContext):void => {
         runtime.endCapture();
     };
 
-    export var strip: TagFunction = (runtime: RuntimeContext): void => {
+    export var strip:TagFunction = (runtime:RuntimeContext):void => {
         runtime.startStrip();
     };
 
-    export var stripClose: TagFunction = (runtime: RuntimeContext): void => {
+    export var stripClose:TagFunction = (runtime:RuntimeContext):void => {
         runtime.endStrip();
     };
 
-    export var math: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
+    export var math:TagFunction = (runtime:RuntimeContext, params:TagParameters):void => {
         if (!params['equation']) {
             runtime.raiseError("math: `equation` is not given");
         }
@@ -43,7 +43,7 @@ export module Functions {
         }
 
         var equation = Utils.stringify(params['equation']);
-        var answer: string;
+        var answer:string;
         try {
             answer = Utils.stringify(eval("with (params) { with (Math) { " + equation + " } }"));
         } catch (e) {
@@ -57,15 +57,15 @@ export module Functions {
         }
     };
 
-    export var counter: TagFunction = (runtime: RuntimeContext, params: TagParameters): void => {
-        var name: string = params['name'] || "default";
+    export var counter:TagFunction = (runtime:RuntimeContext, params:TagParameters):void => {
+        var name:string = params['name'] || "default";
         var counter = runtime.env.counters[name];
         var init = false;
 
         if (!counter) {
             runtime.env.counters[name] = counter = {
-                count:  1,
-                skip:   1,
+                count: 1,
+                skip: 1,
                 upward: true
             };
             init = true;

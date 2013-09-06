@@ -9,16 +9,16 @@ interface Scope extends Context {
 
 class ScopeStack<T extends Scope> {
 
-    top: T;
-    stack: Array<T> = [];
+    top:T;
+    stack:Array<T> = [];
 
-    pushScope(scope: T): void {
+    pushScope(scope:T):void {
         this.top = scope;
         this.stack.push(scope);
         this.top.enter();
     }
 
-    popScope(): boolean {
+    popScope():boolean {
         if (!this.top) {
             return false;
         }
@@ -40,26 +40,21 @@ class ScopeStack<T extends Scope> {
 
 class TranslatorScope implements Scope {
 
-    loopCount: number = 0;
-    index: number = 0;
-    remainSource: string;
+    loopCount:number = 0;
+    index:number = 0;
+    remainSource:string;
 
-    private resumeCallback: (ctx: Context) => void;
+    private resumeCallback:(ctx:Context) => void;
 
-    constructor(
-        public stack: ScopeStack<TranslatorScope>,
-        public buffer: Buffer,
-        public rule: Rule,
-        public source: string
-    ) {
+    constructor(public stack:ScopeStack<TranslatorScope>, public buffer:Buffer, public rule:Rule, public source:string) {
         this.remainSource = source;
     }
 
-    write(...strs: string[]): void {
+    write(...strs:string[]):void {
         this.buffer.write.apply(this.buffer, strs);
     }
 
-    nest(rule: Rule, subSource?: string, callback?: (ctx: Context) => void): void {
+    nest(rule:Rule, subSource?:string, callback?:(ctx:Context) => void):void {
         if (subSource === undefined) {
             subSource = this.remainSource;
         }
@@ -68,11 +63,11 @@ class TranslatorScope implements Scope {
         this.stack.pushScope(scope);
     }
 
-    raiseError(message: string): void {
+    raiseError(message:string):void {
         throw new SyntaxError("Jarty parse error: " + message, this.stack.top.toErrorPosition());
     }
 
-    toErrorPosition(): ErrorPosition {
+    toErrorPosition():ErrorPosition {
         var start = this.source.lastIndexOf("\n", this.index) + 1;
         var end = this.source.indexOf("\n", this.index);
         var breaks = this.source.substr(0, start).match(/\n/g);
@@ -84,15 +79,15 @@ class TranslatorScope implements Scope {
         };
     }
 
-    enter(): void {
+    enter():void {
         this.rule.enter && this.rule.enter(this);
     }
 
-    leave(): void {
+    leave():void {
         this.rule.leave && this.rule.leave(this);
     }
 
-    resume(): void {
+    resume():void {
         if (this.resumeCallback) {
             this.resumeCallback(this);
             this.resumeCallback = undefined;
@@ -103,21 +98,23 @@ class TranslatorScope implements Scope {
 
 export class Translator {
 
-    private stack: ScopeStack<TranslatorScope>;
+    private stack:ScopeStack<TranslatorScope>;
 
-    constructor(public buffer: Buffer, public rootRule: Rule) { }
+    constructor(public buffer:Buffer, public rootRule:Rule) {
+    }
 
-    run(source: string): void {
+    run(source:string):void {
         this.stack = new ScopeStack<TranslatorScope>();
         this.stack.pushScope(new TranslatorScope(this.stack, this.buffer, this.rootRule, source));
         try {
-            while (this.next()) { }
+            while (this.next()) {
+            }
         } finally {
             this.stack = null;
         }
     }
 
-    private next(): boolean {
+    private next():boolean {
         var stack = this.stack,
             scope = stack.top,
             source = scope.remainSource,
