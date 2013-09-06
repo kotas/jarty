@@ -7,6 +7,7 @@ export declare var SpecialBarewords:{ [index: string]: string };
 export module Rules {
 
     var quote = Utils.quote;
+    var camelize = Utils.camelize;
 
     // literal string with double-quotes  ex: "abc"
     var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"';
@@ -196,20 +197,19 @@ export module Rules {
                     if (!matched[2]) {
                         ctx.raiseError("$" + matched[1] + " must be followed by a property name");
                     }
-                    ctx.nest(inEnvVar, matched[2], closePipe);
+                    ctx.write("r.getEnvVar(");
+                } else {
+                    ctx.write("r.get(", quote(matched[1]), ",");
+                }
+                if (matched[2]) { // has variable suffix
+                    var oldClosePipe = closePipe;
+                    ctx.nest(inVariableSuffix, matched[2], (ctx:Context) => {
+                        ctx.write(")");
+                        oldClosePipe && oldClosePipe.call(this, ctx);
+                    });
                     closePipe = undefined;
                 } else {
-                    ctx.write("r.get(", quote(matched[1]));
-                    if (matched[2]) { // has variable suffix
-                        var oldClosePipe = closePipe;
-                        ctx.nest(inVariableSuffix, matched[2], (ctx:Context) => {
-                            ctx.write(")");
-                            oldClosePipe && oldClosePipe.call(this, ctx);
-                        });
-                        closePipe = undefined;
-                    } else {
-                        ctx.write(")");
-                    }
+                    ctx.write("[])");
                 }
             } else if (matched[3]) { // string
                 if (matched[3].length <= 2) {
@@ -238,58 +238,40 @@ export module Rules {
         }
     };
 
-    export var inEnvVar:Rule = {
+    export var inVariableSuffix:Rule = {
         enter: (ctx:Context) => {
-            ctx.write("r.getEnvVar(");
+            ctx.write("[");
         },
 
         leave: (ctx:Context) => {
-            ctx.write(")");
+            ctx.write("]");
         },
 
-        pattern: new RegExp('^(?:(?:\\.|->)(' + eSymbol + ')|(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*))'),
+        pattern: new RegExp(
+            '^(?:' +
+                [
+                    '(?:\\.|->)(' + eSymbol + ')',
+                    '(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)',
+                    '(' + eIndexer + ')',
+                    '(' + eFuncCall + ')'
+                ].join('|') +
+            ')'
+        ),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
             if (ctx.loopCount > 0) {
                 ctx.write(",");
             }
-            if (matched[1]) { // property access (ex: .abc ->abc)
-                ctx.write(quote(matched[1]));
-            } else if (matched[2]) { // referenced property access (ex: .$abc ->$abc)
-                ctx.write("r.get(", quote(matched[2]));
-                if (matched[3]) {
-                    ctx.nest(inIndexer, matched[3], (ctx:Context) => {
-                        ctx.write(")");
-                    });
-                } else {
-                    ctx.write(")");
-                }
-            }
-        },
-
-        notfound: (ctx:Context) => {
-            ctx.raiseError("invalid envvar value");
-        }
-    };
-
-    export var inVariableSuffix:Rule = {
-        pattern: new RegExp([
-            '^(?:(?:\\.|->)(' + eSymbol + ')',
-            '(?:\\.|->)\\$(' + eSymbol + ')(' + eIndexer + '*)',
-            '(' + eIndexer + ')|(' + eFuncCall + '))'
-        ].join('|')),
-
-        found: (ctx:Context, matched:RegExpExecArray) => {
             if (matched[1]) { // property access (ex: $foo.abc $foo->abc)
-                ctx.write(",", quote(matched[1]));
+                ctx.write(quote(matched[1]));
             } else if (matched[2]) { // referenced property access (ex: $foo.$abc $foo->$abc)
-                ctx.write(",r.get(", quote(matched[2]));
+                ctx.write("r.get(", quote(matched[2]), ",");
                 if (matched[3]) {
-                    ctx.nest(inIndexer, matched[3], (ctx:Context) => {
+                    ctx.nest(inVariableSuffix, matched[3], (ctx:Context) => {
                         ctx.write(")");
                     });
                 } else {
-                    ctx.write(")");
+                    ctx.write("[])");
                 }
             } else if (matched[4]) { // indexer access (ex: $foo[123] $foo["abc"])
                 ctx.nest(inIndexer, matched[4]);
@@ -307,7 +289,6 @@ export module Rules {
         pattern: /^\[\s*((?:[^\[\]]|\[[^\]]+\])+)\s*\]/,
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            ctx.write(",");
             ctx.nest(inValue, matched[1]);
         },
 
@@ -320,7 +301,7 @@ export module Rules {
         pattern: /^\(\s*([^\)]*)\s*\)/,
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            ctx.write(",[");
+            ctx.write("[");
             ctx.nest(inFuncCallArgs, matched[1], (ctx:Context) => {
                 ctx.write("]");
             });
@@ -365,10 +346,7 @@ export module Rules {
         pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            var method = matched[1].replace(/_(.)/g, ($0, $1) => {
-                return $1.toUpperCase();
-            });
-            ctx.write(".", method, "(r");
+            ctx.write(".", camelize(matched[1]), "(r");
             if (matched[2]) {
                 ctx.nest(inPipeArgs, matched[2], (ctx:Context) => {
                     ctx.write(")");

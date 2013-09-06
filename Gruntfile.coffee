@@ -26,6 +26,7 @@ module.exports = (grunt) ->
       jarty:
         src: [
           'src/intro.ts.txt',
+          'src/version.ts',
           'src/utils.ts',
           'src/exceptions.ts',
           'src/compiler/interfaces.ts',
@@ -34,6 +35,9 @@ module.exports = (grunt) ->
           'src/compiler/compiler.ts',
           'src/runtime/interfaces.ts',
           'src/runtime/global.ts',
+          'src/runtime/pipes.ts',
+          'src/runtime/pipes/core.ts',
+          'src/runtime/pipes/escape.ts',
           'src/runtime/functions.ts',
           'src/runtime/runtime.ts',
           'src/jarty.ts',

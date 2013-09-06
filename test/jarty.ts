@@ -7,7 +7,7 @@ module spec {
 
     describe('Jarty', () => {
         describe('#compile()', () => {
-            it('should return a function', () => {
+            it('returns a function', () => {
                 expect(Jarty.compile("")).to.be.a("function");
             });
         });

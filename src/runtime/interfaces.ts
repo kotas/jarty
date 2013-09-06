@@ -11,11 +11,12 @@ export interface TagFunction {
 }
 
 export interface PipeStream {
-    [index: string]: PipeFunction;
+    [index: string]: PipeStreamFunction;
+    valueOf(): any;
 }
 
-export interface PipeFunction {
-    (runtime:RuntimeContext, value:any): PipeStream;
+export interface PipeStreamFunction {
+    (runtime:RuntimeContext, ...args:any[]): PipeStream;
 }
 
 export interface Foreach {
@@ -37,6 +38,13 @@ export interface RuntimeEnvironment {
     foreachs: { [index: string]: Foreach };
     captures: { [index: string]: string };
     counters: { [index: string]: Counter };
+    getNow(): number;
+    getConst(): void;
+    getVersion(): string;
+    getLdelim(): string;
+    getRdelim(): string;
+    getForeach(name: string, key: string): any;
+    getCapture(name: string): string;
 }
 
 export interface RuntimeContext {
@@ -45,8 +53,8 @@ export interface RuntimeContext {
     finish(): string;
     raiseError(message:string): void;
     set(key:string, value:any): void;
-    get(key:string, ...suffixes:any[]): any;
-    getEnvVar(...keys:string[]): any;
+    get(key:string, suffixes?:any[]): any;
+    getEnvVar(suffixes:string[]):any;
     pipe(value:any): PipeStream;
     call(method:string, args?:TagParameters): any;
     foreach(params:TagParameters, yieldFunc:() => void, elseFunc?:() => void): void;

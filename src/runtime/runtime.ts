@@ -1,6 +1,9 @@
 /// <reference path="./interfaces.ts" />
 /// <reference path="./global.ts" />
+/// <reference path="./pipes.ts" />
 /// <reference path="../exceptions.ts" />
+/// <reference path="../utils.ts" />
+/// <reference path="../version.ts" />
 
 export class Environment implements RuntimeEnvironment {
 
@@ -9,6 +12,49 @@ export class Environment implements RuntimeEnvironment {
     counters:{ [index: string]: Counter } = {};
 
     constructor(private runtime:RuntimeContext) {
+    }
+
+    getNow(): number {
+        return (new Date()).getTime();
+    }
+
+    getConst(): void {
+        this.runtime.raiseError("not implemented: $jarty.const");
+    }
+
+    getVersion(): string {
+        return version;
+    }
+
+    getLdelim(): string {
+        return "{";
+    }
+
+    getRdelim(): string {
+        return "}";
+    }
+
+    getForeach(name: string, key: string): any {
+        if (!name) {
+            this.runtime.raiseError("`$jarty.foreach` must be followed by foreach name");
+        }
+        if (!key) {
+            this.runtime.raiseError("`$jarty.foreach." + name + "` must be followed by property name");
+        }
+        if (!this.foreachs.hasOwnProperty(key)) {
+            this.runtime.raiseError("`$jarty.foreach." + name + "." + key + "` does not exist");
+        }
+        return this.foreachs[name][key];
+    }
+
+    getCapture(name: string): string {
+        if (!name) {
+            this.runtime.raiseError("`$jarty.capture` must be followed by capture name");
+        }
+        if (!this.captures.hasOwnProperty(name)) {
+            this.runtime.raiseError("`$jarty.capture." + name + "` does not exist");
+        }
+        return this.captures[name];
     }
 
 }
@@ -42,11 +88,11 @@ export class Runtime implements RuntimeContext {
         this.dict[key] = value;
     }
 
-    get(key:string, ...suffixes:any[]):any {
+    get(key:string, suffixes?:any[]):any {
         if (!(key in this.dict)) {
             return null;
         }
-        if (suffixes.length === 0) {
+        if (!suffixes || suffixes.length === 0) {
             return this.dict[key];
         }
 
@@ -78,12 +124,20 @@ export class Runtime implements RuntimeContext {
         return value;
     }
 
-    getEnvVar(...keys:string[]):any {
-
+    getEnvVar(suffixes:string[]):any {
+        if (suffixes.length === 0) {
+            return null;
+        }
+        var key = suffixes[0], args = suffixes.slice(1);
+        var method = "get" + Utils.camelize(key);
+        if (typeof this.env[method] !== "function") {
+            this.raiseError("`$jarty." + key + "` does not exist");
+        }
+        return this.env[method].apply(this.env, args);
     }
 
     pipe(value:any):PipeStream {
-        return {};
+        return new Pipe(value);
     }
 
     call(method:string, args?:TagParameters):any {

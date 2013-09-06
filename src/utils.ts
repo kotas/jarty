@@ -28,4 +28,10 @@ module Utils {
         return '"' + s.replace(/"/g, '\\"') + '"';
     }
 
+    export function camelize(str:string):string {
+        return str.replace(/(?:^|_)([a-z])/g, ($0, $1) => {
+            return $1.toUpperCase();
+        });
+    }
+
 }

@@ -8,7 +8,7 @@ module spec {
     describe('Jarty.Compiler', () => {
         var compiler:Jarty.Compiler;
 
-        function compile(source:any, dict?:Object):string {
+        function render(source:any, dict?:Object):string {
             return compiler.compileToFunction(source)(dict);
         }
 
@@ -17,28 +17,28 @@ module spec {
         });
 
         describe('#compileToString()', () => {
-            it('should return a string', () => {
+            it('returns a string', () => {
                 expect(compiler.compileToString("")).to.be.a("string");
             });
         });
 
         describe('#compileToFunction()', () => {
-            it('should return a function', () => {
+            it('returns a function', () => {
                 expect(compiler.compileToFunction("")).to.be.a("function");
             });
         });
 
         describe('compiled function', () => {
-            it('should keep a plain text as-is', () => {
-                expect(compile("abc")).to.equal("abc");
+            it('keeps a plain text as-is', () => {
+                expect(render("abc")).to.equal("abc");
             });
 
-            it('should always return a string', () => {
-                expect(compile("")).to.equal("");
-                expect(compile(null)).to.equal("");
-                expect(compile(undefined)).to.equal("");
-                expect(compile(123)).to.equal("123");
-                expect(compile(123.45)).to.equal("123.45");
+            it('always returns a string', () => {
+                expect(render("")).to.equal("");
+                expect(render(null)).to.equal("");
+                expect(render(undefined)).to.equal("");
+                expect(render(123)).to.equal("123");
+                expect(render(123.45)).to.equal("123.45");
             });
         });
     });
