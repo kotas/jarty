@@ -171,5 +171,19 @@ module spec {
             });
         });
 
+        describe('{$variable|pipe}', () => {
+            it('passes a variable through pipe', () => {
+                expect(render("{$foo|upper}", { foo: "abc" })).to.equal("ABC");
+            });
+
+            it('passes a variable with parameters through pipe', () => {
+                expect(render("{$foo|cat:'def'}", { foo: "abc" })).to.equal("abcdef");
+            });
+
+            it('passes a variable through chained pipes', () => {
+                expect(render("{$foo|cat:$bar|upper}", { foo: "abc", bar: "def" })).to.equal("ABCDEF");
+            });
+        });
+
     });
 }

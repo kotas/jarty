@@ -7,7 +7,6 @@ export declare var SpecialBarewords:{ [index: string]: string };
 export module Rules {
 
     var quote = Utils.quote;
-    var camelize = Utils.camelize;
 
     // literal string with double-quotes  ex: "abc"
     var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"';
@@ -346,7 +345,7 @@ export module Rules {
         pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            ctx.write(".", camelize(matched[1]), "(r");
+            ctx.write(".", matched[1], "(r");
             if (matched[2]) {
                 ctx.nest(inPipeArgs, matched[2], (ctx:Context) => {
                     ctx.write(")");

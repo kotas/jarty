@@ -31,7 +31,7 @@ Pipe.register("upper", (runtime:RuntimeContext, value:any): string => {
     return stringify(value).toUpperCase();
 });
 
-Pipe.register("countCharacters", (runtime:RuntimeContext, value:any, includeWhitespace:boolean = false): number => {
+Pipe.register("count_characters", (runtime:RuntimeContext, value:any, includeWhitespace:boolean = false): number => {
     if (includeWhitespace) {
         return stringify(value).length;
     } else {
@@ -39,7 +39,7 @@ Pipe.register("countCharacters", (runtime:RuntimeContext, value:any, includeWhit
     }
 });
 
-Pipe.register("countParagraphs", (runtime:RuntimeContext, value:any): number => {
+Pipe.register("count_paragraphs", (runtime:RuntimeContext, value:any): number => {
     return stringify(value).split(/(?:\r?\n){2,}/).length;
 });
 
@@ -47,7 +47,7 @@ Pipe.register("nl2br", (runtime:RuntimeContext, value:any): string => {
     return stringify(value).replace(/\n/g, "<br />");
 });
 
-Pipe.register("regexReplace", (runtime:RuntimeContext, value:any, pattern:string, replace:string): string => {
+Pipe.register("regex_replace", (runtime:RuntimeContext, value:any, pattern:string, replace:string): string => {
     var matched = stringify(pattern).match(/^(.)(.+)(\1)([a-z]*)$/);
     if (!matched) {
         runtime.raiseError("regex_replace: `" + pattern + "` is not regexp");
@@ -70,7 +70,7 @@ Pipe.register("strip", (runtime:RuntimeContext, value:any, replacer:string = " "
     return stringify(value).replace(/\s+/g, replacer);
 });
 
-Pipe.register("stripTags", (runtime:RuntimeContext, value:any, replaceWithSpace:boolean = true): string => {
+Pipe.register("strip_tags", (runtime:RuntimeContext, value:any, replaceWithSpace:boolean = true): string => {
     return stringify(value).replace(/<[^>]*?>/g, replaceWithSpace ? ' ' : '');
 });
 
