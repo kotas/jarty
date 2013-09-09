@@ -51,6 +51,10 @@ module.exports = (grunt) ->
         files:
           'compiled/jarty.min.js': ['compiled/jarty.js']
 
+    clean:
+      compiled:
+        src: ['compiled']
+
     watch:
       files: ['src/**/*.ts', 'test/**/*.ts']
       tasks: ['compile']
@@ -59,6 +63,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-tslint'
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-watch'
 
   grunt.registerTask 'lint',    ['tslint']
