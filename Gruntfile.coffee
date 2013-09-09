@@ -39,6 +39,7 @@ module.exports = (grunt) ->
           'src/runtime/pipes/core.ts',
           'src/runtime/pipes/escape.ts',
           'src/runtime/functions.ts',
+          'src/runtime/functions/core.ts',
           'src/runtime/runtime.ts',
           'src/jarty.ts',
           'src/outro.ts.txt',

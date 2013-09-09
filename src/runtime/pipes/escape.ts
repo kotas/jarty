@@ -87,7 +87,7 @@ export module Escape {
         return newValue;
     }
 
-};
+}
 
 Pipe.register("escape", (runtime:RuntimeContext, value:any, format:string = "html"): string => {
     if (typeof Escape[format] !== "function") {
@@ -95,8 +95,3 @@ Pipe.register("escape", (runtime:RuntimeContext, value:any, format:string = "htm
     }
     return Escape[format](stringify(value));
 });
-
-
-
-
-

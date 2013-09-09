@@ -66,7 +66,7 @@ module spec {
             });
         });
 
-        describe('{$variable.$propname}', () => {
+        describe('{$variable.$ref}', () => {
             it('embeds a property referenced by another variable', () => {
                 expect(render("{$foo.$bar}",
                     {
@@ -92,7 +92,7 @@ module spec {
             });
         });
 
-        describe('{$variable->$propname}', () => {
+        describe('{$variable->$ref}', () => {
             it('embeds a property referenced by another variable', () => {
                 expect(render("{$foo->$bar}",
                     {
@@ -129,7 +129,7 @@ module spec {
             });
         });
 
-        describe('{$variable[$property]}', () => {
+        describe('{$variable[$ref]}', () => {
             it('embeds a property referenced by another variable', () => {
                 expect(render("{$foo[$bar]}",
                     {
@@ -182,6 +182,12 @@ module spec {
 
             it('passes a variable through chained pipes', () => {
                 expect(render("{$foo|cat:$bar|upper}", { foo: "abc", bar: "def" })).to.equal("ABCDEF");
+            });
+        });
+
+        describe('{ldelim}', () => {
+            it('prints the left delimiter `{`', () => {
+                expect(render("{ldelim}")).to.equal("{");
             });
         });
 

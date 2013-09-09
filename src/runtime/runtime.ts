@@ -1,6 +1,7 @@
 /// <reference path="./interfaces.ts" />
 /// <reference path="./global.ts" />
 /// <reference path="./pipes.ts" />
+/// <reference path="./functions.ts" />
 /// <reference path="../exceptions.ts" />
 /// <reference path="../utils.ts" />
 /// <reference path="../version.ts" />
@@ -141,7 +142,12 @@ export class Runtime implements RuntimeContext {
     }
 
     call(method:string, args?:TagParameters):any {
-
+        var fn = Functions.get(method);
+        if (fn) {
+            return fn(this, args);
+        } else {
+            return null;
+        }
     }
 
     foreach(params:TagParameters, yieldFunc:() => void, elseFunc?:() => void):void {
