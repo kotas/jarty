@@ -138,7 +138,7 @@ export class Runtime implements RuntimeContext {
     }
 
     pipe(value:any):PipeStream {
-        return new Pipe(value);
+        return new Pipe(this, value);
     }
 
     call(method:string, args?:TagParameters):any {

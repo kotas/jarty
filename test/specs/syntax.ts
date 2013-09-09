@@ -1,14 +1,12 @@
-/// <reference path="../definitions/mocha/mocha.d.ts" />
-/// <reference path="../definitions/chai/chai.d.ts" />
-/// <reference path="../compiled/jarty.d.ts" />
+/// <reference path="../../definitions/mocha/mocha.d.ts" />
+/// <reference path="../../definitions/chai/chai.d.ts" />
+/// <reference path="../../compiled/jarty.d.ts" />
+/// <reference path="../helper/mocha_jarty.ts" />
 
 module spec {
     var expect = chai.expect;
 
     describe('Jarty Syntax', () => {
-        function render(source:any, dict?:Object):string {
-            return Jarty.compile(source)(dict);
-        }
 
         describe('{* comments *}', () => {
             it('will be skipped', () => {
@@ -171,9 +169,33 @@ module spec {
             });
         });
 
-        describe('{$variable|pipe}', () => {
+        describe('{"string"}', () => {
+            it('embed a string as-is', () => {
+                expect(render('{"abc"}')).to.equal("abc");
+            });
+        });
+
+        describe('{123}', () => {
+            it('embed an integer as-is', () => {
+                expect(render('{123}')).to.equal("123");
+            });
+            it('embed a float as-is', () => {
+                expect(render('{123.45}')).to.equal("123.45");
+            });
+        });
+
+        describe('{value|pipe}', () => {
             it('passes a variable through pipe', () => {
                 expect(render("{$foo|upper}", { foo: "abc" })).to.equal("ABC");
+            });
+
+            it('passes a literal string through pipe', () => {
+                expect(render("{'abc'|upper}")).to.equal("ABC");
+                expect(render("{\"abc\"|upper}")).to.equal("ABC");
+            });
+
+            it('passes a literal number through pipe', () => {
+                expect(render("{123|upper}")).to.equal("123");
             });
 
             it('passes a variable with parameters through pipe', () => {

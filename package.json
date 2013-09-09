@@ -16,6 +16,7 @@
         "grunt-tslint": "*",
         "grunt-contrib-concat": "*",
         "grunt-contrib-uglify": "*",
-        "grunt-contrib-watch": "*"
+        "grunt-contrib-watch": "*",
+        "js-beautify": "*"
     }
 }

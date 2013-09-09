@@ -11,12 +11,13 @@ export interface TagFunction {
 }
 
 export interface PipeStream {
-    [index: string]: PipeStreamFunction;
+    call(name:string, args:any[]):PipeStream;
     valueOf(): any;
 }
 
-export interface PipeStreamFunction {
-    (runtime:RuntimeContext, ...args:any[]): PipeStream;
+export interface PipeFunction {
+    apply(thisArg: any, argArray?: any): any;
+    (runtime:RuntimeContext, value:any, ...args:any[]):any;
 }
 
 export interface Foreach {

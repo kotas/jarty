@@ -46,8 +46,8 @@ export module Rules {
     var eLiteralBlock = '\\{\\s*literal\\s*\\}(.*?)\\{\\s*/literal\\s*\\}';
     // javascript block  ex:  {javascript} alert(123); {/javascript}
     var eJavaScriptBlock = '\\{\\s*javascript\\s*\\}(.*?)\\{\\s*/javascript\\s*\\}';
-    // variable embed tag  ex:  {$abc}  {$foo.bar|baz}
-    var eEmbedTag = '\\{\\s*(\\$' + eSymbol + '.*?)\\s*\\}';
+    // variable embed tag  ex:  {$abc}  {$foo.bar|baz} {"abc"} {123}
+    var eEmbedTag = '\\{\\s*((?:\\$' + eSymbol + '|' + eString + '|' + eNumber + ').*?)\\s*\\}';
     // block open tag  ex: {foo}  {bar baz=123}
     var eOpenTag = '\\{\\s*(' + eSymbol + '.*?)\\s*\\}';
     // block close tag  ex:  {/foo}  {/bar}
@@ -345,13 +345,13 @@ export module Rules {
         pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            ctx.write(".", matched[1], "(r");
+            ctx.write(".call(", quote(matched[1]), ", [");
             if (matched[2]) {
                 ctx.nest(inPipeArgs, matched[2], (ctx:Context) => {
-                    ctx.write(")");
+                    ctx.write("])");
                 });
             } else {
-                ctx.write(")");
+                ctx.write("])");
             }
         },
 
@@ -364,7 +364,9 @@ export module Rules {
         pattern: new RegExp('^:(' + eScalar + ')'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            ctx.write(",");
+            if (ctx.loopCount > 0) {
+                ctx.write(",");
+            }
             ctx.nest(inValue, matched[1]);
         },
 

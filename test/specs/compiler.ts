@@ -1,16 +1,13 @@
-/// <reference path="../definitions/mocha/mocha.d.ts" />
-/// <reference path="../definitions/chai/chai.d.ts" />
-/// <reference path="../compiled/jarty.d.ts" />
+/// <reference path="../../definitions/mocha/mocha.d.ts" />
+/// <reference path="../../definitions/chai/chai.d.ts" />
+/// <reference path="../../compiled/jarty.d.ts" />
+/// <reference path="../helper/mocha_jarty.ts" />
 
 module spec {
     var expect = chai.expect;
 
     describe('Jarty.Compiler', () => {
         var compiler:Jarty.Compiler;
-
-        function render(source:any, dict?:Object):string {
-            return compiler.compileToFunction(source)(dict);
-        }
 
         beforeEach(() => {
             compiler = new Jarty.Compiler();
@@ -37,8 +34,6 @@ module spec {
                 expect(render("")).to.equal("");
                 expect(render(null)).to.equal("");
                 expect(render(undefined)).to.equal("");
-                expect(render(123)).to.equal("123");
-                expect(render(123.45)).to.equal("123.45");
             });
         });
     });

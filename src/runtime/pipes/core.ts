@@ -11,10 +11,6 @@ Pipe.register("default", (runtime:RuntimeContext, value:any, defaultValue:any = 
     }
 });
 
-Pipe.register("stringify", (runtime:RuntimeContext, value:any): string => {
-    return stringify(value);
-});
-
 Pipe.register("cat", (runtime:RuntimeContext, value:any, str:string = ""): string => {
     return stringify(value) + str;
 });

@@ -7,3 +7,7 @@ export function compile(source:string):Function {
     compiler = compiler || new Compiler();
     return compiler.compileToFunction(source);
 }
+
+export function render(source:string, dict?:Dictionary) {
+    return compile(source)(dict);
+}
