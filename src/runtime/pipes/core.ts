@@ -23,10 +23,6 @@ Pipe.register("upper", (runtime:RuntimeContext, value:any): string => {
     return stringify(value).toUpperCase();
 });
 
-Pipe.register("upper", (runtime:RuntimeContext, value:any): string => {
-    return stringify(value).toUpperCase();
-});
-
 Pipe.register("count_characters", (runtime:RuntimeContext, value:any, includeWhitespace:boolean = false): number => {
     if (includeWhitespace) {
         return stringify(value).length;

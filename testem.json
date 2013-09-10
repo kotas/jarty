@@ -1,11 +1,11 @@
 {
-    "framework" : "mocha+chai",
-    "before_tests" : "grunt compile",
-    "src_files" : [
+    "framework":    "mocha+chai",
+    "before_tests": "grunt compile",
+    "src_files": [
         "src/**/*.ts",
         "test/**/*.ts"
     ],
-    "serve_files" : [
+    "serve_files": [
         "compiled/jarty.js",
         "node_modules/js-beautify/js/lib/beautify.js",
         "compiled/test/helper/**.js",

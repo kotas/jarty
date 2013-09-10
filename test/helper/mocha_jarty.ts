@@ -48,7 +48,7 @@ module MochaJarty {
                 console.log("- Source:  ", last.source);
                 console.log("- Dict:    ", last.dict);
                 console.log("- Compiled:");
-                console.log(tidy(last.compiled));
+                console.log(last.compiled && tidy(last.compiled));
                 console.log("- Output:");
                 console.log(last.output);
             }

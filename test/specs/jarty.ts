@@ -7,7 +7,7 @@ module spec {
     var expect = chai.expect;
 
     describe('Jarty', () => {
-        describe('#compile()', () => {
+        describe('.compile()', () => {
             it('returns a function', () => {
                 expect(Jarty.compile("")).to.be.a("function");
             });

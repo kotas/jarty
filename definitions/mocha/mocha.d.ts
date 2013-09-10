@@ -1,49 +1,31 @@
-// Type definitions for mocha 1.9.0
-// Project: http://visionmedia.github.io/mocha/
-// Definitions by: Kazi Manzur Rashid <https://github.com/kazimanzurrashid/>
-// DefinitelyTyped: https://github.com/borisyankov/DefinitelyTyped
+// mocha.d.ts 
+// 
+// Mocha (c) 2011-2012 TJ Holowaychuk <tj@vision-media.ca>
+// 
+// Hand written by Murat Girgin
+//  based on http://visionmedia.github.com/mocha/ 
+//
+ 
+declare var describe: {
+  (testDescription: string, f: Function): any;
+  only(testDescription: string, f: Function): any;
+  skip(testDescription: string, f: Function): any;    
+};
 
-interface Mocha {
-    setup(options: MochaSetupOptions);
-    run(callback: () => void);
-}
-
-interface MochaSetupOptions {
-    slow: number;
-    timeout: number;
-    ui: string;
-}
-
-declare var describe : {
-    (description: string, spec: () => void): void;
-    only(description: string, spec: () => void): void;
-    skip(description: string, spec: () => void): void;
-    timeout(ms: number);
+declare var context: {
+  (testDescription: string, f?: Function): any;  
 }
 
 declare var it: {
-    (expectation: string, assertion?: () => void): void;
-    (expectation: string, assertion?: (done: (error?: Error) => void) => void): void;
-    only(expectation: string, assertion?: () => void): void;
-    only(expectation: string, assertion?: (done: (error?: Error) => void) => void): void;
-    skip(expectation: string, assertion?: () => void): void;
-    skip(expectation: string, assertion?: (done: (error?: Error) => void) => void): void;
-    timeout(ms: number);
+  (testDescription: string, f?: Function, done?: Function): any;
+  only(testDescription: string, f?: Function, done?: Function): any;
+  skip(testDescription: string, f?: Function, done?: Function): any;
 };
-
-declare function before(action: () => void): void;
-
-declare function before(action: (done: (failReason?) => void) => void): void;
-
-declare function after(action: () => void): void;
-
-declare function after(action: (done: (failReason?) => void) => void): void;
-
-declare function beforeEach(action: () => void): void;
-
-declare function beforeEach(action: (done: (failReason?) => void) => void): void;
-
-declare function afterEach(action: () => void): void;
-
-declare function afterEach(action: (done: (failReason?) => void) => void): void;
-
+ 
+declare function before(f: Function, done?: Function): any;
+ 
+declare function after(f: Function, done?: Function): any;
+ 
+declare function beforeEach(f: Function, done?: Function): any;
+ 
+declare function afterEach(f: Function, done?: Function): any;

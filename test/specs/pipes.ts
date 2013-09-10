@@ -48,6 +48,37 @@ module spec {
             });
         });
 
+        describe('count_characters', () => {
+            context('including whitespace', () => {
+                it('counts the number of characters in the value', () => {
+                    expect(render("{$foo|count_characters:true}", { foo: "abc def ghi" })).to.equal("11");
+                });
+            });
+            context('not including whitespace', () => {
+                it('counts the number of characters without whitespaces in the value', () => {
+                    expect(render("{$foo|count_characters}", { foo: "abc def\tghi\njkl" })).to.equal("12");
+                });
+            });
+        });
+
+        describe('count_paragraphs', () => {
+            it('counts the number of paragraphs in the value', () => {
+                expect(render("{$foo|count_paragraphs}", { foo: "abc\n\ndef\n\nghi" })).to.equal("3");
+            });
+
+            it('returns 1 for the string not containing any line-breaks', () => {
+                expect(render("{$foo|count_paragraphs}", { foo: "abc" })).to.equal("1");
+            });
+
+            it('does not count a single line-break as a paragraph', () => {
+                expect(render("{$foo|count_paragraphs}", { foo: "abc\ndef\nghi" })).to.equal("1");
+            });
+
+            it('does not count empty paragraphs', () => {
+                expect(render("{$foo|count_paragraphs}", { foo: "abc\n\n\n\ndef" })).to.equal("2");
+            });
+        });
+
     });
 
 }
