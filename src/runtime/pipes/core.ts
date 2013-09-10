@@ -32,7 +32,15 @@ Pipe.register("count_characters", (runtime:RuntimeContext, value:any, includeWhi
 });
 
 Pipe.register("count_paragraphs", (runtime:RuntimeContext, value:any): number => {
-    return stringify(value).split(/(?:\r?\n){2,}/).length;
+    return stringify(value).split(/[\r\n]+/).length;
+});
+
+Pipe.register("count_sentences", (runtime:RuntimeContext, value:any): number => {
+    return (stringify(value).match(/[^\s]\.(?!\w)/g) || []).length;
+});
+
+Pipe.register("count_words", (runtime:RuntimeContext, value:any): number => {
+    return (stringify(value).match(/(?:^|\s)\S*[a-zA-Z0-9\x80-\xff]/g) || []).length;
 });
 
 Pipe.register("nl2br", (runtime:RuntimeContext, value:any): string => {
@@ -44,8 +52,12 @@ Pipe.register("regex_replace", (runtime:RuntimeContext, value:any, pattern:strin
     if (!matched) {
         runtime.raiseError("regex_replace: `" + pattern + "` is not regexp");
     }
-    var regexp = new RegExp(matched[2], matched[4] + "g");
-    return stringify(value).replace(regexp, replace);
+    try {
+        var regexp = new RegExp(matched[2], matched[4] + "g");
+    } catch (e) {
+        runtime.raiseError("regex_replace: `" + pattern + "` is invalid regexp: " + (e.message || e));
+    }
+    return stringify(value).replace(regexp, stringify(replace));
 });
 
 Pipe.register("replace", (runtime:RuntimeContext, value:any, pattern:string, replace:string): string => {
