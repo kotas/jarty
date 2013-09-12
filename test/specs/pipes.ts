@@ -182,6 +182,50 @@ module spec {
             });
         });
 
+        describe('escape', () => {
+            it('escapes a string for HTML by default', () => {
+                expect(render("{$foo|escape}", { foo: "a<b>c&d\"e'f" })).to.equal("a&lt;b&gt;c&amp;d&quot;e&#039;f");
+            });
+
+            it('escapes a string for URL', () => {
+                expect(render("{$foo|escape:url}", { foo: "foo?bar=baz/" })).to.equal("foo%3Fbar%3Dbaz%2F");
+            });
+
+            it('escapes a string for URL PathInfo', () => {
+                expect(render("{$foo|escape:urlpathinfo}", { foo: "foo?bar=baz/" })).to.equal("foo%3Fbar%3Dbaz/");
+            });
+
+            it('escapes a string for quotation', () => {
+                expect(render("{$foo|escape:quotes}", { foo: "foo'bar\\'baz" })).to.equal("foo\\'bar\\'baz");
+            });
+
+            it('converts a string into hex string', () => {
+                expect(render("{$foo|escape:hex}", { foo: "あabc?def" })).to.equal("%E3%81%82%61%62%63%3F%64%65%66");
+            });
+
+            it('converts a string into hex entities', () => {
+                expect(render("{$foo|escape:hexentity}", { foo: "あabc?def" })).to.equal(
+                    "&#x3042;&#x61;&#x62;&#x63;&#x3F;&#x64;&#x65;&#x66;"
+                );
+            });
+
+            it('converts a string into decimal entities', () => {
+                expect(render("{$foo|escape:decentity}", { foo: "あabc?def" })).to.equal(
+                    "&#12354;&#97;&#98;&#99;&#63;&#100;&#101;&#102;"
+                );
+            });
+
+            it('escapes a string for JavaString', () => {
+                expect(render("{$foo|escape:javascript}", { foo: "a'b\"c\\d\r\ne</f" })).to.equal(
+                    "a\\'b\\\"c\\\\d\\r\\ne<\\/f"
+                );
+            });
+
+            it('escapes a mail address', () => {
+                expect(render("{$foo|escape:mail}", { foo: "foo@example.com" })).to.equal("foo [AT] example [DOT] com");
+            });
+        });
+
     });
 
 }

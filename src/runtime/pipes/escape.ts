@@ -40,23 +40,23 @@ export module Escape {
     }
 
     export function quotes(value:string):string {
-        return value.replace(/((?:[^\\']|\\.)+)|(')|/g, function ($0, $1, $2) {
+        return value.replace(/((?:[^\\']|\\.)+)|(')/g, function ($0, $1, $2) {
             return $2 ? "\\'" : $1;
         });
     }
 
     export function hex(value:string):string {
-        var newValue = "";
-        for (var i = 0, l = value.length; i < l; i++) {
-            newValue += "%" + zeroPad(value.charCodeAt(i), 2, 16);
-        }
-        return newValue;
+        var newValue = encodeURIComponent(value);
+        return newValue.replace(/(%[0-9A-F]{2})|(.)/g, function ($0, $1, $2) {
+            return $1 ? $1 : "%" + $2.charCodeAt(0).toString(16);
+        });
     }
 
     export function hexentity(value:string):string {
         var newValue = "";
         for (var i = 0, l = value.length; i < l; i++) {
-            newValue += "&#x" + zeroPad(value.charCodeAt(i), 4, 16) + ";";
+            var code = value.charCodeAt(i);
+            newValue += "&#x" + zeroPad(code, code > 0xFF ? 4 : 2, 16) + ";";
         }
         return newValue;
     }
@@ -77,14 +77,6 @@ export module Escape {
 
     export function mail(value:string):string {
         return value.replace(/@/g, ' [AT] ').replace(/\./g, ' [DOT] ');
-    }
-
-    export function nonstd(value:string):string {
-        var newValue = "";
-        for (var i = 0, l = value.length; i < l; i++) {
-            newValue += value.charCodeAt(i) >= 126 ? ("&#" + value.charCodeAt(i) + ";") : value.charAt(i);
-        }
-        return newValue;
     }
 
 }
