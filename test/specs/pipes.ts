@@ -113,6 +113,75 @@ module spec {
             });
         });
 
+        describe('replace', () => {
+            it('replaces the string to new one by a static string', () => {
+                expect(render("{$foo|replace:'aa':'oo'}", { foo: "faabaaaaabc" })).to.equal("foobooooabc");
+            });
+        });
+
+        describe('spacify', () => {
+            it('adds spaces between characters in the string', () => {
+                expect(render("{$foo|spacify}", { foo: "abc" })).to.equal("a b c");
+            });
+
+            it('adds the given string between characters in the target string', () => {
+                expect(render("{$foo|spacify:'oo'}", { foo: "abc" })).to.equal("aoobooc");
+            });
+        });
+
+        describe('strip', () => {
+            it('replaces whitespace sequences with a space', () => {
+                expect(render("{$foo|strip}", { foo: "a     b\nc\t d" })).to.equal("a b c d");
+            });
+
+            it('replaces whitespace sequences with the given string', () => {
+                expect(render("{$foo|strip:'__'}", { foo: "a     b\nc\t d" })).to.equal("a__b__c__d");
+            });
+        });
+
+        describe('strip_tags', () => {
+            it('replaces tags in a string with a space', () => {
+                expect(render("{$foo|strip_tags}", { foo: '<a href="#">ab<s>c</s></a>' })).to.equal(" ab c  ");
+            });
+
+            it('removes tags from a string', () => {
+                expect(render("{$foo|strip_tags:false}", { foo: '<a href="#">ab<s>c</s></a>' })).to.equal("abc");
+            });
+        });
+
+        describe('truncate', () => {
+            var longText = Array(101).join("a");  // "aaaaa.....aaaaa".length === 100
+            var text = "Two Sisters Reunite after Eighteen Years at Checkout Counter.";
+
+            it('truncates a string to 80 characters and adds a trim marker to the end by default', () => {
+                expect(render("{$foo|truncate}", { foo: longText })).to.match(/^a{77}\.\.\.$/);
+            });
+
+            it('never truncates a string if it is short', () => {
+                expect(render("{$foo|truncate}", { foo: text })).to.equal(text);
+            });
+
+            it('truncates a string to the given length by word', () => {
+                expect(render("{$foo|truncate:30}", { foo: text })).to.equal("Two Sisters Reunite after...");
+            });
+
+            it('truncates a string and adds the given string to the end', () => {
+                expect(render("{$foo|truncate:30:'---'}", { foo: text })).to.equal("Two Sisters Reunite after---");
+            });
+
+            it('truncates a string to the given length by character', () => {
+                expect(render("{$foo|truncate:30:'':true}", { foo: text })).to.equal("Two Sisters Reunite after Eigh");
+            });
+
+            it('includes the length of a trim marker to the truncate length', () => {
+                expect(render("{$foo|truncate:30:'...':true}", { foo: text })).to.equal("Two Sisters Reunite after E...");
+            });
+
+            it('omits the middle of the string', () => {
+                expect(render("{$foo|truncate:30:'..':true:true}", { foo: text })).to.equal("Two Sisters Re..ckout Counter.");
+            });
+        });
+
     });
 
 }
