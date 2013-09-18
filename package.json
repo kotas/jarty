@@ -1,6 +1,6 @@
 {
     "name": "jarty",
-    "version": "1.0.0",
+    "version": "1.0.0-alpha",
     "description": "Smarty-like Template Engine for JavaScript",
     "license": "MIT",
     "author": "Kota Saito",
