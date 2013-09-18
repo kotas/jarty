@@ -1,9 +1,6 @@
 /// <reference path="./interfaces.ts" />
 /// <reference path="./../utils.ts" />
 
-export declare var SpecialTags:{ [index: string]: Rule };
-export declare var SpecialBarewords:{ [index: string]: string };
-
 export module Rules {
 
     var quote = Utils.quote;
@@ -53,11 +50,32 @@ export module Rules {
     // block close tag  ex:  {/foo}  {/bar}
     var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
 
+    export var SpecialTags:{ [index: string]: Rule } = {
+        "if": Rules.inIfTag,
+        "else": Rules.inElseTag,
+        "elseif": Rules.inElseIfTag,
+        "/if": Rules.inEndIfTag,
+        "foreach": Rules.inForeachTag,
+        "foreachelse": Rules.inForeachElseTag,
+        "/foreach": Rules.inEndForeachTag,
+        "for": Rules.inForTag,
+        "forelse": Rules.inForElseTag,
+        "/for": Rules.inEndForTag
+    };
+
+    export var SpecialBarewords:{ [index: string]: string } = {
+        "true": "true",
+        "false": "false",
+        "null": "null",
+        "undefined": "undefined",
+        "NaN": "NaN"
+    };
+
     export var start:Rule = {
         enter: (ctx:Context) => {
             ctx.write(
                 "var Jarty = arguments.callee.__jarty__;" +
-                    "var r = new Jarty.Runtime(dict || {});"
+                    "var r = new Jarty.Runtime(_ || {});"
             );
         },
 
@@ -192,15 +210,12 @@ export module Rules {
             }
 
             if (matched[1]) { // variable
-                if (matched[1] === "smarty" || matched[1] === "jarty") { // special variable
-                    if (!matched[2]) {
-                        ctx.raiseError("$" + matched[1] + " must be followed by a property name");
-                    }
-                    ctx.write("r.getEnvVar(");
-                } else {
-                    ctx.write("r.get(", quote(matched[1]), ",");
-                }
                 if (matched[2]) { // has variable suffix
+                    if (matched[1] === "smarty" || matched[1] === "jarty") { // special variable
+                        ctx.write("r.getEnvVar(");
+                    } else {
+                        ctx.write("r.get(", quote(matched[1]), ",");
+                    }
                     var oldClosePipe = closePipe;
                     ctx.nest(inVariableSuffix, matched[2], (ctx:Context) => {
                         ctx.write(")");
@@ -208,7 +223,7 @@ export module Rules {
                     });
                     closePipe = undefined;
                 } else {
-                    ctx.write("[])");
+                    ctx.write("r.dict[", quote(matched[1]), "]");
                 }
             } else if (matched[3]) { // string
                 if (matched[3].length <= 2) {
@@ -264,13 +279,13 @@ export module Rules {
             if (matched[1]) { // property access (ex: $foo.abc $foo->abc)
                 ctx.write(quote(matched[1]));
             } else if (matched[2]) { // referenced property access (ex: $foo.$abc $foo->$abc)
-                ctx.write("r.get(", quote(matched[2]), ",");
                 if (matched[3]) {
+                    ctx.write("r.get(", quote(matched[2]), ",");
                     ctx.nest(inVariableSuffix, matched[3], (ctx:Context) => {
                         ctx.write(")");
                     });
                 } else {
-                    ctx.write("[])");
+                    ctx.write("r.dict[", quote(matched[2]), "]");
                 }
             } else if (matched[4]) { // indexer access (ex: $foo[123] $foo["abc"])
                 ctx.nest(inIndexer, matched[4]);
@@ -505,24 +520,3 @@ export module Rules {
     };
 
 }
-
-export var SpecialTags:{ [index: string]: Rule } = {
-    "if": Rules.inIfTag,
-    "else": Rules.inElseTag,
-    "elseif": Rules.inElseIfTag,
-    "/if": Rules.inEndIfTag,
-    "foreach": Rules.inForeachTag,
-    "foreachelse": Rules.inForeachElseTag,
-    "/foreach": Rules.inEndForeachTag,
-    "for": Rules.inForTag,
-    "forelse": Rules.inForElseTag,
-    "/for": Rules.inEndForTag
-};
-
-export var SpecialBarewords:{ [index: string]: string } = {
-    "true": "true",
-    "false": "false",
-    "null": "null",
-    "undefined": "undefined",
-    "NaN": "NaN"
-};

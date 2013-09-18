@@ -31,7 +31,7 @@ export class Compiler {
     compileToFunction(source:string):Function {
         var script = this.compileToString(source);
         try {
-            var compiled = new Function("dict", script);
+            var compiled = new Function("_", script);
         } catch (e) {
             throw new SyntaxError(
                 "Jarty compile error: " + (e.message || e) + "\n" +
