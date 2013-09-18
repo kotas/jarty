@@ -164,7 +164,7 @@ export module Rules {
         pattern: new RegExp('^\\s+(' + eSymbol + ')=(' + eValue + ')'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            if (ctx.loopCount > 0) {
+            if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
             ctx.write(matched[1], ":");
@@ -273,7 +273,7 @@ export module Rules {
         ),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            if (ctx.loopCount > 0) {
+            if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
             if (matched[1]) { // property access (ex: $foo.abc $foo->abc)
@@ -345,7 +345,7 @@ export module Rules {
         pattern: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|^`(' + eValue + ')`'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            if (ctx.loopCount > 0) {
+            if (ctx.getLoopCount() > 0) {
                 ctx.write("+");
             }
             if (matched[1]) {
@@ -379,7 +379,7 @@ export module Rules {
         pattern: new RegExp('^:(' + eScalar + ')'),
 
         found: (ctx:Context, matched:RegExpExecArray) => {
-            if (ctx.loopCount > 0) {
+            if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
             ctx.nest(inValue, matched[1]);

@@ -1,4 +1,5 @@
 /// <reference path="./utils.ts" />
+/// <reference path="./runtime/interfaces.ts" />
 
 export interface ErrorPosition {
     col: number;
@@ -28,6 +29,6 @@ export class SyntaxError implements JartyError {
 export class RuntimeError implements JartyError {
     name:string = "Jarty.RuntimeError";
 
-    constructor(public message:string) {
+    constructor(public message:string, public runtime:RuntimeContext) {
     }
 }

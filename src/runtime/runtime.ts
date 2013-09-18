@@ -82,7 +82,7 @@ export class Runtime implements RuntimeContext {
     }
 
     raiseError(message:string):void {
-        throw new RuntimeError(message);
+        throw new RuntimeError(message, this);
     }
 
     set(key:string, value:any):void {

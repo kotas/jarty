@@ -1,26 +1,95 @@
 /// <reference path="./interfaces.ts" />
 /// <reference path="../exceptions.ts" />
 
-interface Scope extends Context {
-    enter(): void;
-    leave(): void;
-    resume(): void;
+class Scope {
+
+    index:number = 0;
+    errorIndex:number = 0;
+    loopCount:number = 0;
+    remainSource:string;
+    resumeCallback:(ctx:Context) => void;
+
+    constructor(public context:Context, public rule:Rule, public source:string) {
+        this.remainSource = source;
+    }
+
+    enter():void {
+        this.rule.enter && this.rule.enter(this.context);
+    }
+
+    leave():void {
+        this.rule.leave && this.rule.leave(this.context);
+    }
+
+    found(matched:RegExpExecArray):void {
+        var skipped = this.remainSource.slice(0, matched.index);
+        this.rule.found && this.rule.found(this.context, matched, skipped);
+
+        this.errorIndex = this.index + matched.index;
+        this.index += matched.index + matched[0].length;
+        this.remainSource = this.remainSource.slice(matched.index + matched[0].length);
+        this.loopCount++;
+    }
+
+    notfound():void {
+        this.rule.notfound && this.rule.notfound(this.context, this.remainSource);
+
+        this.errorIndex = this.index;
+        this.index += this.remainSource.length;
+        this.remainSource = '';
+        this.loopCount++;
+    }
+
+    resume():void {
+        if (this.resumeCallback) {
+            this.resumeCallback(this.context);
+            this.resumeCallback = undefined;
+        }
+    }
+
+    next():boolean {
+        if (!this.rule.pattern || this.remainSource.length === 0) {
+            return false;
+        }
+
+        var matched = this.rule.pattern.exec(this.remainSource);
+        if (matched) {
+            this.found(matched);
+            return true;
+        } else {
+            this.notfound();
+            return false;
+        }
+    }
+
+    toErrorPosition():ErrorPosition {
+        var start = this.source.lastIndexOf("\n", this.errorIndex) + 1;
+        var end = this.source.indexOf("\n", this.errorIndex);
+        var breaks = this.source.substr(0, start).match(/\n/g);
+        return {
+            col: this.errorIndex - start + 1,
+            row: breaks ? breaks.length + 1 : 1,
+            line: this.source.substring(start, end === -1 ? this.source.length : end),
+            source: this.source
+        };
+    }
+
 }
 
-class ScopeStack<T extends Scope> {
+class ScopeStack {
 
-    top:T;
-    stack:Array<T> = [];
+    top:Scope;
+    stack:Array<Scope> = [];
 
-    pushScope(scope:T):void {
+    pushScope(scope:Scope):void {
         this.top = scope;
         this.stack.push(scope);
         this.top.enter();
     }
 
-    popScope():boolean {
+    popScope():void {
         if (!this.top) {
-            return false;
+            throw new Error("Try to popScope on empty scope stack");
         }
 
         this.top.leave();
@@ -29,25 +98,24 @@ class ScopeStack<T extends Scope> {
         if (this.stack.length > 0) {
             this.top = this.stack[this.stack.length - 1];
             this.top.resume();
-            return true;
         } else {
             this.top = null;
-            return false;
+        }
+    }
+
+    getErrorPosition():ErrorPosition {
+        if (this.stack.length > 0) {
+            return this.stack[0].toErrorPosition();
+        } else {
+            return null;
         }
     }
 
 }
 
-class TranslatorScope implements Scope {
+class TranslatorContext implements Context {
 
-    loopCount:number = 0;
-    index:number = 0;
-    remainSource:string;
-
-    private resumeCallback:(ctx:Context) => void;
-
-    constructor(public stack:ScopeStack<TranslatorScope>, public buffer:Buffer, public rule:Rule, public source:string) {
-        this.remainSource = source;
+    constructor(public stack:ScopeStack, public buffer:Buffer, public source:string) {
     }
 
     write(...strs:string[]):void {
@@ -56,93 +124,37 @@ class TranslatorScope implements Scope {
 
     nest(rule:Rule, subSource?:string, callback?:(ctx:Context) => void):void {
         if (subSource === undefined) {
-            subSource = this.remainSource;
+            subSource = this.stack.top.remainSource;
         }
-        var scope = new TranslatorScope(this.stack, this.buffer, rule, subSource);
-        this.resumeCallback = callback;
-        this.stack.pushScope(scope);
+        this.stack.top.resumeCallback = callback;
+        this.stack.pushScope(new Scope(this, rule, subSource));
+    }
+
+    getLoopCount():number {
+        return this.stack.top.loopCount;
     }
 
     raiseError(message:string):void {
-        throw new SyntaxError("Jarty parse error: " + message, this.stack.top.toErrorPosition());
-    }
-
-    toErrorPosition():ErrorPosition {
-        var start = this.source.lastIndexOf("\n", this.index) + 1;
-        var end = this.source.indexOf("\n", this.index);
-        var breaks = this.source.substr(0, start).match(/\n/g);
-        return {
-            col: this.index - start,
-            row: breaks ? breaks.length : 1,
-            line: this.source.substring(start, end === -1 ? this.source.length : end),
-            source: this.source
-        };
-    }
-
-    enter():void {
-        this.rule.enter && this.rule.enter(this);
-    }
-
-    leave():void {
-        this.rule.leave && this.rule.leave(this);
-    }
-
-    resume():void {
-        if (this.resumeCallback) {
-            this.resumeCallback(this);
-            this.resumeCallback = undefined;
-        }
+        throw new SyntaxError("Jarty parse error: " + message, this.stack.getErrorPosition());
     }
 
 }
 
 export class Translator {
 
-    private stack:ScopeStack<TranslatorScope>;
-
-    constructor(public buffer:Buffer, public rootRule:Rule) {
+    constructor(public rootRule:Rule) {
     }
 
-    run(source:string):void {
-        this.stack = new ScopeStack<TranslatorScope>();
-        this.stack.pushScope(new TranslatorScope(this.stack, this.buffer, this.rootRule, source));
-        try {
-            while (this.next()) {
+    run(buffer:Buffer, source:string):void {
+        var stack = new ScopeStack();
+        var context = new TranslatorContext(stack, buffer, source);
+
+        stack.pushScope(new Scope(context, this.rootRule, source));
+        while (stack.top) {
+            if (stack.top.next() === false) {
+                stack.popScope();
             }
-        } finally {
-            this.stack = null;
         }
-    }
-
-    private next():boolean {
-        var stack = this.stack,
-            scope = stack.top,
-            source = scope.remainSource,
-            rule = scope.rule;
-
-        if (!rule.pattern) {
-            return this.stack.popScope();
-        }
-
-        while (scope === stack.top && source.length > 0) {
-            var matched = rule.pattern.exec(source);
-            if (matched) {
-                scope.index += matched.index + matched[0].length;
-                var skipped = source.slice(0, matched.index);
-                rule.found && rule.found(scope, matched, skipped);
-                scope.remainSource = source = source.slice(matched.index + matched[0].length);
-            } else {
-                scope.index += source.length;
-                rule.notfound && rule.notfound(scope, source);
-                scope.remainSource = source = '';
-            }
-            scope.loopCount++;
-        }
-        if (scope === stack.top && source.length === 0) {
-            return this.stack.popScope();
-        }
-
-        return true;
     }
 
 }

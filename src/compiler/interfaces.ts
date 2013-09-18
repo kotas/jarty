@@ -3,10 +3,9 @@ export interface Buffer {
 }
 
 export interface Context extends Buffer {
-    loopCount: number;
     source: string;
-    index: number;
     nest(rule:Rule, subSource?:string, callback?:(ctx:Context) => void): void;
+    getLoopCount():number;
     raiseError(message:string): void;
 }
 

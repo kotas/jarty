@@ -23,8 +23,8 @@ export class Compiler {
                 }
             }
         };
-        var translator = new Translator(buffer, this.rule);
-        translator.run(source);
+        var translator = new Translator(this.rule);
+        translator.run(buffer, source);
         return script;
     }
 
