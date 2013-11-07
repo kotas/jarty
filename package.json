@@ -1,23 +1,22 @@
 {
-    "name": "jarty",
-    "version": "1.0.0-alpha",
-    "description": "Smarty-like Template Engine for JavaScript",
-    "license": "MIT",
-    "author": "Kota Saito",
-    "homepage": "http://jarty.kotas.jp/",
-    "bugs": "https://github.com/kotas/jarty/issues",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/kotas/jarty.git"
-    },
-    "devDependencies": {
-        "grunt": "0.4.1",
-        "grunt-typescript": "*",
-        "grunt-tslint": "*",
-        "grunt-contrib-concat": "*",
-        "grunt-contrib-uglify": "*",
-        "grunt-contrib-clean": "*",
-        "grunt-contrib-watch": "*",
-        "js-beautify": "*"
-    }
+  "name": "jarty",
+  "version": "1.0.0-alpha",
+  "description": "Smarty-like Template Engine for JavaScript",
+  "license": "MIT",
+  "author": "Kota Saito",
+  "homepage": "http://jarty.kotas.jp/",
+  "bugs": "https://github.com/kotas/jarty/issues",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kotas/jarty.git"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-typescript": "~0.2.4",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-uglify": "~0.2.5",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-watch": "~0.5.3",
+    "js-beautify": "~1.4.1"
+  }
 }

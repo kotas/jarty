@@ -1,4 +1,15 @@
 module.exports = (grunt) ->
+
+  grunt.loadNpmTasks 'grunt-typescript'
+  grunt.loadNpmTasks 'grunt-contrib-concat'
+  grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-contrib-clean'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
+
+  grunt.registerTask 'compile', ['concat:jarty', 'typescript:jarty', 'typescript:test']
+  grunt.registerTask 'default', ['compile']
+  grunt.registerTask 'release', ['compile', 'uglify']
+
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
 
@@ -15,12 +26,6 @@ module.exports = (grunt) ->
         dest: 'compiled'
         options:
           target: 'es3'
-
-    tslint:
-      options:
-        configuration: grunt.file.readJSON 'tslint.json'
-      files:
-        src: ['src/**/*.ts', 'test/**/*.ts']
 
     concat:
       jarty:
@@ -58,15 +63,3 @@ module.exports = (grunt) ->
     watch:
       files: ['src/**/*.ts', 'test/**/*.ts']
       tasks: ['compile']
-
-  grunt.loadNpmTasks 'grunt-typescript'
-  grunt.loadNpmTasks 'grunt-tslint'
-  grunt.loadNpmTasks 'grunt-contrib-concat'
-  grunt.loadNpmTasks 'grunt-contrib-uglify'
-  grunt.loadNpmTasks 'grunt-contrib-clean'
-  grunt.loadNpmTasks 'grunt-contrib-watch'
-
-  grunt.registerTask 'lint',    ['tslint']
-  grunt.registerTask 'compile', ['lint', 'concat:jarty', 'typescript:jarty', 'typescript:test']
-  grunt.registerTask 'default', ['compile']
-  grunt.registerTask 'release', ['compile', 'uglify']
