@@ -6,55 +6,36 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-watch'
 
-  grunt.registerTask 'compile', ['concat:jarty', 'typescript:jarty', 'typescript:test']
+  grunt.registerTask 'compile', ['typescript:test']
+  grunt.registerTask 'release', ['typescript:release', 'concat:release', 'uglify:release']
   grunt.registerTask 'default', ['compile']
-  grunt.registerTask 'release', ['compile', 'uglify']
 
   grunt.initConfig
     pkg: grunt.file.readJSON 'package.json'
 
     typescript:
-      jarty:
-        src:  ['compiled/jarty.ts']
-        dest: 'compiled/jarty.js'
-        options:
-          target: 'es3'
-          sourcemap: true
-          declaration: true
       test:
-        src: ['test/**/*.ts']
-        dest: 'compiled'
+        src:  ['src/**/*.ts', 'test/**/*.ts']
+        dest: 'compiled/test-jarty.js'
         options:
-          target: 'es3'
+          sourcemap: true
+      release:
+        src:  ['src/**/*.ts']
+        dest: 'compiled/jarty.js'
 
     concat:
-      jarty:
+      release:
         src: [
-          'src/wrap/intro.ts.txt',
-          'src/version.ts',
-          'src/utils.ts',
-          'src/exceptions.ts',
-          'src/compiler/interfaces.ts',
-          'src/compiler/translator.ts',
-          'src/compiler/rules.ts',
-          'src/compiler/compiler.ts',
-          'src/runtime/interfaces.ts',
-          'src/runtime/global.ts',
-          'src/runtime/pipes.ts',
-          'src/runtime/pipes/core.ts',
-          'src/runtime/pipes/escape.ts',
-          'src/runtime/functions.ts',
-          'src/runtime/functions/core.ts',
-          'src/runtime/runtime.ts',
-          'src/jarty.ts',
-          'src/wrap/outro.ts.txt',
+          'etc/wrap/intro.js.txt',
+          'compiled/jarty.js',
+          'etc/wrap/outro.js.txt',
         ]
-        dest: 'compiled/jarty.ts'
+        dest: 'dist/jarty.js'
 
     uglify:
-      dist:
+      release:
         files:
-          'compiled/jarty.min.js': ['compiled/jarty.js']
+          'dist/jarty.min.js': ['dist/jarty.js']
 
     clean:
       compiled:

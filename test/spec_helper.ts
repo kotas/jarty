@@ -1,5 +1,6 @@
-/// <reference path="../../definitions/mocha/mocha.d.ts" />
-/// <reference path="../../compiled/jarty.d.ts" />
+/// <reference path="../definitions/mocha.d.ts" />
+/// <reference path="../definitions/chai.d.ts" />
+/// <reference path="../src/jarty.ts" />
 
 declare var mocha:any;
 declare var js_beautify:Function;
@@ -8,12 +9,12 @@ module MochaJarty {
 
     var last:{
         source:string;
-        dict:Jarty.Dictionary;
+        dict:Object;
         compiled?:Function;
         output?:string;
     };
 
-    export function render(source:string, dict?:Jarty.Dictionary):string {
+    export function render(source:string, dict?:Object):string {
         last = {
             source: source,
             dict: dict
@@ -47,10 +48,14 @@ module MochaJarty {
                 console.log("Error:", err.message || err);
                 console.log("- Source:  ", last.source);
                 console.log("- Dict:    ", last.dict);
-                console.log("- Compiled:");
-                console.log(last.compiled && tidy(last.compiled));
-                console.log("- Output:");
-                console.log(last.output);
+                if (last.compiled) {
+                    console.log("- Compiled:");
+                    console.log(last.compiled['jartyCompiled'] && tidy(last.compiled['jartyCompiled']));
+                }
+                if (last.output) {
+                    console.log("- Output:");
+                    console.log(last.output);
+                }
             }
         });
     };
@@ -61,3 +66,4 @@ module MochaJarty {
 
 // Export to global
 var render = MochaJarty.render;
+var expect = chai.expect;

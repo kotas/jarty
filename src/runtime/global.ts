@@ -1,55 +1,49 @@
-/// <reference path="./interfaces.ts" />
+module Jarty {
 
-var GlobalNamespace = function (dict:Dictionary):void {
-    for (var key in dict) {
-        if (dict.hasOwnProperty(key)) {
-            this[key] = dict[key];
-        }
-    }
-};
-
-export interface Global {
-    set(key:string, value:any): void;
-    set(dict:Dictionary): void;
-    get(key:string): any;
-    remove(key:string): void;
-    clear(): void;
-    wrap(dict:Dictionary): Dictionary;
-}
-
-var globalUsed:boolean = false;
-
-export var global:Global = {
-
-    set: (...args:any[]):void => {
-        globalUsed = true;
-        if (args.length === 1) {
-            var dict = args[0];
-            for (var key in dict) {
-                if (dict.hasOwnProperty(key)) {
-                    GlobalNamespace.prototype[key] = args[1];
-                }
+    var GlobalNamespace = function (dict:Object):void {
+        for (var key in dict) {
+            if (dict.hasOwnProperty(key)) {
+                this[key] = dict[key];
             }
-        } else {
-            GlobalNamespace.prototype[args[0]] = args[1];
         }
-    },
+    };
+    var GlobalProto = GlobalNamespace.prototype;
 
-    get: (key:string):any => {
-        return GlobalNamespace.prototype[key];
-    },
+    export module Global {
 
-    remove: (key:string):void => {
-        delete GlobalNamespace.prototype[key];
-    },
+        var globalUsed:boolean = false;
 
-    clear: ():void => {
-        globalUsed = false;
-        GlobalNamespace.prototype = {};
-    },
+        export function set(...args:any[]):void {
+            globalUsed = true;
+            if (args.length === 1) {
+                var dict = args[0];
+                for (var key in dict) {
+                    if (dict.hasOwnProperty(key)) {
+                        GlobalProto[key] = args[1];
+                    }
+                }
+            } else {
+                GlobalProto[args[0]] = args[1];
+            }
+        }
 
-    wrap: (dict:Dictionary):Dictionary => {
-        return globalUsed ? <Dictionary> new GlobalNamespace(dict) : dict;
+        export function get(key:string):any {
+            return GlobalProto[key];
+        }
+
+        export function remove(key:string):void {
+            delete GlobalProto[key];
+        }
+
+        export function clear():void {
+            globalUsed = false;
+            GlobalProto = GlobalNamespace.prototype = {};
+        }
+
+        export function wrap(dict:Object):Object {
+            return globalUsed ? new GlobalNamespace(dict) : dict;
+        }
+
     }
 
-};
+}

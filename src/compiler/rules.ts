@@ -1,9 +1,7 @@
-/// <reference path="./interfaces.ts" />
-/// <reference path="./../utils.ts" />
+/// <reference path="../utils.ts" />
+/// <reference path="translator.ts" />
 
-export module Rules {
-
-    var quote = Utils.quote;
+module Jarty.Rules {
 
     // literal string with double-quotes  ex: "abc"
     var eDoubleQuoteString = '"[^"\\\\]*(?:\\\\.[^"\\\\]*)*"';
@@ -50,7 +48,7 @@ export module Rules {
     // block close tag  ex:  {/foo}  {/bar}
     var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
 
-    export var SpecialTags:{ [index: string]: Rule } = {
+    export var SpecialTags:{ [index: string]: TranslationRule } = {
         "if": Rules.inIfTag,
         "else": Rules.inElseTag,
         "elseif": Rules.inElseIfTag,
@@ -71,18 +69,7 @@ export module Rules {
         "NaN": "NaN"
     };
 
-    export var start:Rule = {
-        enter: (ctx:Context) => {
-            ctx.write(
-                "var Jarty = arguments.callee.__jarty__;" +
-                    "var r = new Jarty.Runtime(_ || {});"
-            );
-        },
-
-        leave: (ctx:Context) => {
-            ctx.write("return r.finish();");
-        },
-
+    export var start:TranslationRule = {
         pattern: new RegExp([
             eCommentTag,
             eLiteralBlock,
@@ -92,7 +79,7 @@ export module Rules {
             eCloseTag
         ].join("|")),
 
-        found: (ctx:Context, matched:RegExpExecArray, skipped:string) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray, skipped:string) => {
             if (skipped.length > 0) {
                 ctx.write("r.write(", quote(skipped), ");");
             }
@@ -112,33 +99,33 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context, extra:string) => {
+        notfound: (ctx:TranslationContext, extra:string) => {
             ctx.write("r.write(", quote(extra), ");");
         }
     };
 
-    export var inEmbedTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inEmbedTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("r.write(");
             ctx.nest(inValue);
         },
 
-        leave: (ctx:Context) => {
+        leave: (ctx:TranslationContext) => {
             ctx.write(");");
         }
     };
 
-    export var inOpenTag:Rule = {
+    export var inOpenTag:TranslationRule = {
         pattern: new RegExp('^(' + eSymbol + ')(.*)$'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             var method = matched[1].toLowerCase();
             if (SpecialTags[method]) {
                 ctx.nest(SpecialTags[method], matched[0]);
             } else {
                 ctx.write("r.call(", quote(method), ",");
                 if (matched[2]) {
-                    ctx.nest(inOpenTagArgs, matched[2], (ctx:Context) => {
+                    ctx.nest(inOpenTagArgs, matched[2], (ctx:TranslationContext) => {
                         ctx.write(");");
                     });
                 } else {
@@ -147,23 +134,23 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid open tag");
         }
     };
 
-    export var inOpenTagArgs:Rule = {
-        enter: (ctx:Context) => {
+    export var inOpenTagArgs:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("{");
         },
 
-        leave: (ctx:Context) => {
+        leave: (ctx:TranslationContext) => {
             ctx.write("}");
         },
 
         pattern: new RegExp('^\\s+(' + eSymbol + ')=(' + eValue + ')'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
@@ -171,15 +158,15 @@ export module Rules {
             ctx.nest(inValue, matched[2]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid open tag argument");
         }
     };
 
-    export var inCloseTag:Rule = {
+    export var inCloseTag:TranslationRule = {
         pattern: new RegExp('^(' + eSymbol + ')$'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             var method = matched[1].toLowerCase();
             if (SpecialTags["/" + method]) {
                 ctx.nest(SpecialTags["/" + method], matched[0]);
@@ -188,22 +175,22 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid close tag");
         }
     };
 
-    export var inValue:Rule = {
+    export var inValue:TranslationRule = {
         pattern: new RegExp(eValue),
 
-        found: function (ctx:Context, matched:RegExpExecArray) {
-            var closePipe:(ctx:Context) => void;
+        found: function (ctx:TranslationContext, matched:RegExpExecArray) {
+            var closePipe:(ctx:TranslationContext) => void;
 
             if (matched[6]) { // has pipe
                 ctx.write("r.pipe(");
-                closePipe = (ctx:Context) => {
+                closePipe = (ctx:TranslationContext) => {
                     ctx.write(")");
-                    ctx.nest(inPipe, matched[6], (ctx:Context) => {
+                    ctx.nest(inPipe, matched[6], (ctx:TranslationContext) => {
                         ctx.write(".valueOf()");
                     });
                 };
@@ -217,7 +204,7 @@ export module Rules {
                         ctx.write("r.get(", quote(matched[1]), ",");
                     }
                     var oldClosePipe = closePipe;
-                    ctx.nest(inVariableSuffix, matched[2], (ctx:Context) => {
+                    ctx.nest(inVariableSuffix, matched[2], (ctx:TranslationContext) => {
                         ctx.write(")");
                         oldClosePipe && oldClosePipe.call(this, ctx);
                     });
@@ -247,17 +234,17 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid value");
         }
     };
 
-    export var inVariableSuffix:Rule = {
-        enter: (ctx:Context) => {
+    export var inVariableSuffix:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("[");
         },
 
-        leave: (ctx:Context) => {
+        leave: (ctx:TranslationContext) => {
             ctx.write("]");
         },
 
@@ -269,10 +256,10 @@ export module Rules {
                     '(' + eIndexer + ')',
                     '(' + eFuncCall + ')'
                 ].join('|') +
-            ')'
+                ')'
         ),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
@@ -281,7 +268,7 @@ export module Rules {
             } else if (matched[2]) { // referenced property access (ex: $foo.$abc $foo->$abc)
                 if (matched[3]) {
                     ctx.write("r.get(", quote(matched[2]), ",");
-                    ctx.nest(inVariableSuffix, matched[3], (ctx:Context) => {
+                    ctx.nest(inVariableSuffix, matched[3], (ctx:TranslationContext) => {
                         ctx.write(")");
                     });
                 } else {
@@ -294,57 +281,57 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid value indexer");
         }
     };
 
-    export var inIndexer:Rule = {
+    export var inIndexer:TranslationRule = {
         pattern: /^\[\s*((?:[^\[\]]|\[[^\]]+\])+)\s*\]/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.nest(inValue, matched[1]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid indexer");
         }
     };
 
-    export var inFuncCall:Rule = {
+    export var inFuncCall:TranslationRule = {
         pattern: /^\(\s*([^\)]*)\s*\)/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.write("[");
-            ctx.nest(inFuncCallArgs, matched[1], (ctx:Context) => {
+            ctx.nest(inFuncCallArgs, matched[1], (ctx:TranslationContext) => {
                 ctx.write("]");
             });
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid function call");
         }
     };
 
-    export var inFuncCallArgs:Rule = {
+    export var inFuncCallArgs:TranslationRule = {
         pattern: new RegExp('^(\\,?)\\s*(' + eValue + ')'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (matched[1]) {
                 ctx.write(",");
             }
             ctx.nest(inValue, matched[2]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid function arguments");
         }
     };
 
-    export var inString:Rule = {
+    export var inString:TranslationRule = {
         pattern: new RegExp('^((?:[^\\\\`]+|\\\\u[0-9a-fA-F]{4}|\\\\x[0-9a-fA-F]{2}|\\\\.)+)|^`(' + eValue + ')`'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (ctx.getLoopCount() > 0) {
                 ctx.write("+");
             }
@@ -356,13 +343,13 @@ export module Rules {
         }
     };
 
-    export var inPipe:Rule = {
+    export var inPipe:TranslationRule = {
         pattern: new RegExp('^\\|@?(' + eSymbol + ')((?::' + eScalar + ')*)'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.write(".call(", quote(matched[1]), ", [");
             if (matched[2]) {
-                ctx.nest(inPipeArgs, matched[2], (ctx:Context) => {
+                ctx.nest(inPipeArgs, matched[2], (ctx:TranslationContext) => {
                     ctx.write("])");
                 });
             } else {
@@ -370,83 +357,83 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid pipe");
         }
     };
 
-    export var inPipeArgs:Rule = {
+    export var inPipeArgs:TranslationRule = {
         pattern: new RegExp('^:(' + eScalar + ')'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (ctx.getLoopCount() > 0) {
                 ctx.write(",");
             }
             ctx.nest(inValue, matched[1]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid pipe argument");
         }
     };
 
 
-    export var inIfTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inIfTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("if (");
         },
 
-        leave: (ctx:Context) => {
+        leave: (ctx:TranslationContext) => {
             ctx.write(") {");
         },
 
         pattern: /^if\s+(.+)$/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.nest(inIfCondition, matched[1]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid if tag");
         }
     };
 
-    export var inElseTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inElseTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("} else {");
         }
     };
 
-    export var inElseIfTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inElseIfTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("} else if (");
         },
 
-        leave: (ctx:Context) => {
+        leave: (ctx:TranslationContext) => {
             ctx.write(") {");
         },
 
         pattern: /^elseif\s+(.+)$/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.nest(inIfCondition, matched[1]);
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid elseif tag");
         }
     };
 
-    export var inEndIfTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inEndIfTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("}");
         }
     };
 
-    export var inIfCondition:Rule = {
+    export var inIfCondition:TranslationRule = {
         pattern: new RegExp('^\\s*(?:(' + eOperators + ')|(and)|(or)|(not)|(' + eValue + '))'),
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             if (matched[1]) {
                 ctx.write(matched[1]);
             } else if (matched[2]) {
@@ -460,61 +447,61 @@ export module Rules {
             }
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid if condition");
         }
     };
 
-    export var inForeachTag:Rule = {
+    export var inForeachTag:TranslationRule = {
         pattern: /^foreach(\s+.+)$/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.write("r.foreach(");
-            ctx.nest(inOpenTagArgs, matched[1], (ctx:Context) => {
+            ctx.nest(inOpenTagArgs, matched[1], (ctx:TranslationContext) => {
                 ctx.write(", function () {");
             });
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid foreach tag");
         }
     };
 
-    export var inForeachElseTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inForeachElseTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("}, function () {");
         }
     };
 
-    export var inEndForeachTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inEndForeachTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("});");
         }
     };
 
-    export var inForTag:Rule = {
+    export var inForTag:TranslationRule = {
         pattern: /^for(\s+.+)$/,
 
-        found: (ctx:Context, matched:RegExpExecArray) => {
+        found: (ctx:TranslationContext, matched:RegExpExecArray) => {
             ctx.write("r.for_(");
-            ctx.nest(inOpenTagArgs, matched[1], (ctx:Context) => {
+            ctx.nest(inOpenTagArgs, matched[1], (ctx:TranslationContext) => {
                 ctx.write(", function () {");
             });
         },
 
-        notfound: (ctx:Context) => {
+        notfound: (ctx:TranslationContext) => {
             ctx.raiseError("invalid for tag");
         }
     };
 
-    export var inForElseTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inForElseTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("}, function () {");
         }
     };
 
-    export var inEndForTag:Rule = {
-        enter: (ctx:Context) => {
+    export var inEndForTag:TranslationRule = {
+        enter: (ctx:TranslationContext) => {
             ctx.write("});");
         }
     };

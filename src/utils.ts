@@ -1,4 +1,4 @@
-module Utils {
+module Jarty {
 
     export function stringify(value:any):string {
         return (value === null || value === undefined) ? "" : String(value);

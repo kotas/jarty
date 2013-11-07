@@ -1,19 +1,23 @@
-/// <reference path="./interfaces.ts" />
+/// <reference path="interfaces.ts" />
 
-export class Functions {
+module Jarty {
 
-    private static dict:{ [name:string]:TagFunction } = {};
+    export class Functions {
 
-    static register(name:string, fn:TagFunction):void {
-        this.dict[name] = fn;
-    }
+        private static dict:{ [name:string]:TagFunction } = {};
 
-    static unregister(name:string):void {
-        delete this.dict[name];
-    }
+        static register(name:string, fn:TagFunction):void {
+            this.dict[name] = fn;
+        }
 
-    static get(name:string):TagFunction {
-        return this.dict[name];
+        static unregister(name:string):void {
+            delete this.dict[name];
+        }
+
+        static get(name:string):TagFunction {
+            return this.dict[name];
+        }
+
     }
 
 }

@@ -1,0 +1,8 @@
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = Jarty;
+    } else {
+        this.Jarty = Jarty;
+    }
+
+})();

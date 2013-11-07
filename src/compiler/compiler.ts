@@ -1,45 +1,46 @@
-/// <reference path="./interfaces.ts" />
-/// <reference path="./rules.ts" />
-/// <reference path="./translator.ts" />
 /// <reference path="../utils.ts" />
+/// <reference path="../runtime/runtime.ts" />
+/// <reference path="rules.ts" />
+/// <reference path="translator.ts" />
 
-declare var Jarty:any;
+module Jarty {
 
-export class Compiler {
-
-    private rule:Rule;
-
-    constructor(rule?:Rule) {
-        this.rule = rule || Rules.start;
+    export interface CompiledFunction {
+        (dict?: Object): string;
     }
 
-    compileToString(source:string):string {
-        source = Utils.stringify(source);
-        var script:string = "";
-        var buffer:Buffer = {
-            write: (...strs:string[]) => {
-                for (var i = 0; i < strs.length; i++) {
-                    script += strs[i];
-                }
-            }
-        };
-        var translator = new Translator(this.rule);
-        translator.run(buffer, source);
-        return script;
-    }
+    export class Compiler {
 
-    compileToFunction(source:string):Function {
-        var script = this.compileToString(source);
-        try {
-            var compiled = new Function("_", script);
-        } catch (e) {
-            throw new SyntaxError(
-                "Jarty compile error: " + (e.message || e) + "\n" +
-                    (script.length > 60 ? script.substr(0, 60) + "..." : script)
-            );
+        constructor(public rule:TranslationRule = Rules.start) {
         }
-        compiled["__jarty__"] = Jarty;
-        return compiled;
+
+        compile(source:string):CompiledFunction {
+            var script = this.compileToString(source);
+            try {
+                var compiled = new Function("r", script);
+            } catch (e) {
+                throw new SyntaxError(
+                    "Jarty compile error: " + (e.message || e) + "\n" +
+                        (script.length > 60 ? script.substr(0, 60) + "..." : script)
+                );
+            }
+
+            var wrapped = (dict?: Object): string => {
+                var runtime: Runtime = new Runtime(dict || {});
+                compiled(runtime);
+                return runtime.finish();
+            };
+            wrapped['jartySource'] = source;
+            wrapped['jartyCompiled'] = script;
+            return wrapped;
+        }
+
+        private compileToString(source:string):string {
+            source = stringify(source);
+            var translator: Translator = new Translator(this.rule);
+            return translator.translate(source);
+        }
+
     }
 
 }

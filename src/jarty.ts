@@ -1,13 +1,16 @@
-/// <reference path="./compiler/compiler.ts" />
-/// <reference path="./runtime/runtime.ts" />
+/// <reference path="compiler/compiler.ts" />
 
-var compiler:Compiler = null;
+module Jarty {
 
-export function compile(source:string):Function {
-    compiler = compiler || new Compiler();
-    return compiler.compileToFunction(source);
-}
+    var compiler:Compiler = null;
 
-export function render(source:string, dict?:Dictionary) {
-    return compile(source)(dict);
+    export function compile(source:string):CompiledFunction {
+        compiler = compiler || new Compiler();
+        return compiler.compile(source);
+    }
+
+    export function render(source:string, dict?:Object) {
+        return compile(source)(dict);
+    }
+
 }

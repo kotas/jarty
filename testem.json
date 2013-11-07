@@ -6,9 +6,7 @@
     "test/**/*.ts"
   ],
   "serve_files": [
-    "compiled/jarty.js",
     "node_modules/js-beautify/js/lib/beautify.js",
-    "compiled/test/helper/**.js",
-    "compiled/test/specs/**.js"
+    "compiled/test-jarty.js"
   ]
 }
