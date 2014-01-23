@@ -4,7 +4,7 @@ module Jarty {
 
     var compiler:Compiler = null;
 
-    export function compile(source:string):CompiledFunction {
+    export function compile(source:string): (dict?:Object) => string {
         compiler = compiler || new Compiler();
         return compiler.compile(source);
     }

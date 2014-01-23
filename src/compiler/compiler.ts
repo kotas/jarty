@@ -5,16 +5,12 @@
 
 module Jarty {
 
-    export interface CompiledFunction {
-        (dict?: Object): string;
-    }
-
     export class Compiler {
 
         constructor(public rule:TranslationRule = Rules.start) {
         }
 
-        compile(source:string):CompiledFunction {
+        compile(source:string): (dict?:Object) => string {
             var script = this.compileToString(source);
             try {
                 var compiled = new Function("r", script);

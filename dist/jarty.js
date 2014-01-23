@@ -334,9 +334,125 @@ var Jarty;
         };
 
         Runtime.prototype.foreach = function (params, yieldFunc, elseFunc) {
+            var _this = this;
+            if (!params.hasOwnProperty('from')) {
+                this.raiseError("foreach: `from` is not given");
+            }
+            if (!params.hasOwnProperty('item')) {
+                this.raiseError("foreach: `item` is not given");
+            }
+            if (!params['from']) {
+                return;
+            }
+            if (params.hasOwnProperty('name')) {
+                this.namedForeach(params, yieldFunc, elseFunc);
+                return;
+            }
+
+            var yielded = false, keyVar = params['key'], itemVar = params['item'];
+            this.iterate(params['from'], function (key, item) {
+                keyVar && (_this.dict[keyVar] = key);
+                _this.dict[itemVar] = item;
+                yieldFunc();
+                yielded = true;
+            });
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
+        };
+
+        Runtime.prototype.namedForeach = function (params, yieldFunc, elseFunc) {
+            var _this = this;
+            var from = params['from'];
+            var total;
+            if (typeof from['length'] === 'number') {
+                total = from['length'];
+            } else {
+                total = 0;
+                for (var key in from) {
+                    if (from.hasOwnProperty(key)) {
+                        total++;
+                    }
+                }
+            }
+
+            var ctx = this.env.foreachs[params['name']] = {
+                show: false,
+                total: total,
+                first: false,
+                last: false,
+                index: 0,
+                iteration: 1
+            };
+
+            var yielded = false, keyVar = params['key'], itemVar = params['item'];
+            this.iterate(from, function (key, item, index) {
+                ctx.show = true;
+                ctx.first = (index === 0);
+                ctx.last = (index === total - 1);
+                ctx.index = index;
+                ctx.iteration = index + 1;
+
+                keyVar && (_this.dict[keyVar] = key);
+                _this.dict[itemVar] = item;
+                yieldFunc();
+                yielded = true;
+            });
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
+        };
+
+        Runtime.prototype.iterate = function (target, callback) {
+            if (!target) {
+                return;
+            }
+            if (typeof target['length'] === 'number') {
+                for (var i = 0, l = target['length']; i < l; i++) {
+                    callback(i, target[i], i);
+                }
+            } else {
+                var index = 0;
+                for (var key in target) {
+                    if (target.hasOwnProperty(key)) {
+                        callback(key, target[key], index++);
+                    }
+                }
+            }
         };
 
         Runtime.prototype.for_ = function (params, yieldFunc, elseFunc) {
+            if (!params.hasOwnProperty('to')) {
+                this.raiseError("for: `to` is not given");
+            }
+            if (!params.hasOwnProperty('item')) {
+                this.raiseError("for: `item` is not given");
+            }
+
+            var from = parseInt(params['from']) || 0;
+            var to = parseInt(params['to']) || 0;
+            var step = parseInt(params['step']) || 1;
+
+            var yielded = false, itemVar = params['item'];
+            if (step < 0) {
+                for (var i = from; i >= to; i += step) {
+                    this.dict[itemVar] = i;
+                    yieldFunc();
+                    yielded = true;
+                }
+            } else {
+                for (var i = from; i <= to; i += step) {
+                    this.dict[itemVar] = i;
+                    yieldFunc();
+                    yielded = true;
+                }
+            }
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
         };
 
         Runtime.prototype.startCapture = function (name, assign) {
@@ -563,27 +679,6 @@ var Jarty;
         var eOpenTag = '\\{\\s*(' + eSymbol + '.*?)\\s*\\}';
 
         var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
-
-        Rules.SpecialTags = {
-            "if": Rules.inIfTag,
-            "else": Rules.inElseTag,
-            "elseif": Rules.inElseIfTag,
-            "/if": Rules.inEndIfTag,
-            "foreach": Rules.inForeachTag,
-            "foreachelse": Rules.inForeachElseTag,
-            "/foreach": Rules.inEndForeachTag,
-            "for": Rules.inForTag,
-            "forelse": Rules.inForElseTag,
-            "/for": Rules.inEndForTag
-        };
-
-        Rules.SpecialBarewords = {
-            "true": "true",
-            "false": "false",
-            "null": "null",
-            "undefined": "undefined",
-            "NaN": "NaN"
-        };
 
         Rules.start = {
             pattern: new RegExp([
@@ -973,6 +1068,27 @@ var Jarty;
             enter: function (ctx) {
                 ctx.write("});");
             }
+        };
+
+        Rules.SpecialTags = {
+            "if": Rules.inIfTag,
+            "else": Rules.inElseTag,
+            "elseif": Rules.inElseIfTag,
+            "/if": Rules.inEndIfTag,
+            "foreach": Rules.inForeachTag,
+            "foreachelse": Rules.inForeachElseTag,
+            "/foreach": Rules.inEndForeachTag,
+            "for": Rules.inForTag,
+            "forelse": Rules.inForElseTag,
+            "/for": Rules.inEndForTag
+        };
+
+        Rules.SpecialBarewords = {
+            "true": "true",
+            "false": "false",
+            "null": "null",
+            "undefined": "undefined",
+            "NaN": "NaN"
         };
     })(Jarty.Rules || (Jarty.Rules = {}));
     var Rules = Jarty.Rules;

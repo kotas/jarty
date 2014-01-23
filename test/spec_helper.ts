@@ -24,17 +24,6 @@ module MochaJarty {
         return last.output;
     }
 
-    function tidy(fn:Function):string {
-        var body = fn.toString().replace(/^(.|\n)+?\{\s*/, "").replace(/\s*\}\s*$/, "");
-        body = body.replace(/var Jarty = .+?;/, "");
-        body = body.replace(/var r = .+?;/, "");
-        body = body.replace(/return r\.finish\(\);/, "");
-        body = body.replace(/\(/g, "(\n").replace(/\)/g, "\n)");
-        body = body.replace(/\(\n+([^\(\)]*?)\n+\)/g, "($1)");
-        body = body.replace(/(\.(call|valueOf)\()/g, "\n$1");
-        return js_beautify(body);
-    }
-
     var oldReporter = mocha._reporter;
     var Reporter = function (runner:any) {
         oldReporter.apply(this, arguments);
@@ -48,9 +37,9 @@ module MochaJarty {
                 console.log("Error:", err.message || err);
                 console.log("- Source:  ", last.source);
                 console.log("- Dict:    ", last.dict);
-                if (last.compiled) {
+                if (last.compiled && last.compiled['jartyCompiled']) {
                     console.log("- Compiled:");
-                    console.log(last.compiled['jartyCompiled'] && tidy(last.compiled['jartyCompiled']));
+                    console.log(js_beautify(last.compiled['jartyCompiled']));
                 }
                 if (last.output) {
                     console.log("- Output:");
@@ -60,7 +49,7 @@ module MochaJarty {
         });
     };
 
-    mocha.reporter(Reporter);
+    mocha.reporter(<any>Reporter);
 
 }
 

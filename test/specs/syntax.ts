@@ -207,4 +207,69 @@ describe('Jarty Syntax', () => {
         });
     });
 
+    describe('{rdelim}', () => {
+        it('prints the right delimiter `}`', () => {
+            expect(render("{rdelim}")).to.equal("}");
+        });
+    });
+
+    describe('{foreach}', () => {
+        it('iterates over an array', () => {
+            expect(render("{foreach from=$items item=foo}{$foo},{/foreach}", { items: [1, 2, 3] })).to.equal("1,2,3,");
+        });
+
+        it('iterates over a hash', () => {
+            var result = render("{foreach from=$items item=v key=k}{$k}={$v},{/foreach}", { items: { a: 1, b: 2, c: 3 } });
+            expect(result).to.match(/^(a=1,|b=2,|c=3,){3}$/);
+            expect(result).to.match(/a=1,/);
+            expect(result).to.match(/b=2,/);
+            expect(result).to.match(/c=3,/);
+        });
+
+        it('does nothing on an empty array', () => {
+            expect(render("{foreach from=$items item=foo}{$foo},{/foreach}", { items: [] })).to.equal("");
+        });
+
+        it('calls foreachelse block for an empty array', () => {
+            expect(render("{foreach from=$items item=foo}{$foo},{foreachelse}ok{/foreach}", { items: [] })).to.equal("ok");
+        });
+
+        context('when `name` is set', () => {
+            function renderForeach(block:string):string {
+                return render("{foreach from=$items item=item name=it}" + block + "{/foreach}", { items: ["a", "b", "c"] });
+            }
+
+            it('exposes `$jarty.foreach.name.first`; whether the item is first one', () => {
+                expect(renderForeach("{if $jarty.foreach.it.first}{$item}{/if}")).to.equal("a");
+            });
+
+            it('exposes `$jarty.foreach.name.last`; whether the item is last one', () => {
+                expect(renderForeach("{if $jarty.foreach.it.last}{$item}{/if}")).to.equal("c");
+            });
+
+            it('exposes `$jarty.foreach.name.total`; the number of items', () => {
+                expect(renderForeach("{$jarty.foreach.it.total}")).to.equal("333");
+            });
+
+            it('exposes `$jarty.foreach.name.total` properly for a hash', () => {
+                var source = "{foreach from=$items item=item name=it}{$jarty.foreach.it.total}{/foreach}";
+                expect(render(source, { items: { a: 1, b: 2, c: 3 } })).to.equal("333");
+            });
+
+            it('exposes `$jarty.foreach.name.index`; the 0-origin index of item', () => {
+                expect(renderForeach("{$jarty.foreach.it.index}")).to.equal("012");
+            });
+
+            it('exposes `$jarty.foreach.name.iteration`; the 1-origin number of iteration', () => {
+                expect(renderForeach("{$jarty.foreach.it.iteration}")).to.equal("123");
+            });
+
+            it('exposes `$jarty.foreach.name.show`; whether any iteration happened', () => {
+                var source = "{foreach from=$items item=item name=it}{/foreach}{if $jarty.foreach.it.show}shown{/if}";
+                expect(render(source, { items: [1] })).to.equal("shown");
+                expect(render(source, { items: [] })).to.equal("");
+            });
+        });
+    });
+
 });

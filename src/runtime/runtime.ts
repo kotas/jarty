@@ -99,11 +99,123 @@ module Jarty {
         }
 
         foreach(params:Object, yieldFunc:() => void, elseFunc?:() => void):void {
+            if (!params.hasOwnProperty('from')) {
+                this.raiseError("foreach: `from` is not given");
+            }
+            if (!params.hasOwnProperty('item')) {
+                this.raiseError("foreach: `item` is not given");
+            }
+            if (!params['from']) {
+                return;
+            }
+            if (params.hasOwnProperty('name')) {
+                this.namedForeach(params, yieldFunc, elseFunc);
+                return;
+            }
 
+            var yielded = false, keyVar = params['key'], itemVar = params['item'];
+            this.iterate(params['from'], (key, item) => {
+                keyVar && (this.dict[keyVar] = key);
+                this.dict[itemVar] = item;
+                yieldFunc();
+                yielded = true;
+            });
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
+        }
+
+        private namedForeach(params:Object, yieldFunc:() => void, elseFunc?:() => void):void {
+            var from = params['from'];
+            var total: number;
+            if (typeof from['length'] === 'number') {
+                total = from['length'];
+            } else {
+                total = 0;
+                for (var key in from) {
+                    if (from.hasOwnProperty(key)) {
+                        total++;
+                    }
+                }
+            }
+
+            var ctx: Foreach = this.env.foreachs[params['name']] = {
+                show: false,
+                total: total,
+                first: false,
+                last: false,
+                index: 0,
+                iteration: 1
+            };
+
+            var yielded = false, keyVar = params['key'], itemVar = params['item'];
+            this.iterate(from, (key, item, index) => {
+                ctx.show = true;
+                ctx.first = (index === 0);
+                ctx.last = (index === total - 1);
+                ctx.index = index;
+                ctx.iteration = index + 1;
+
+                keyVar && (this.dict[keyVar] = key);
+                this.dict[itemVar] = item;
+                yieldFunc();
+                yielded = true;
+            });
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
+        }
+
+        private iterate(target:Object, callback:(key: any, item: any, index: number) => void) {
+            if (!target) {
+                return;
+            }
+            if (typeof target['length'] === 'number') {
+                for (var i = 0, l = target['length']; i < l; i++) {
+                    callback(i, target[i], i);
+                }
+            } else {
+                var index = 0;
+                for (var key in target) {
+                    if (target.hasOwnProperty(key)) {
+                        callback(key, target[key], index++);
+                    }
+                }
+            }
         }
 
         for_(params:Object, yieldFunc:() => void, elseFunc?:() => void):void {
+            if (!params.hasOwnProperty('to')) {
+                this.raiseError("for: `to` is not given");
+            }
+            if (!params.hasOwnProperty('item')) {
+                this.raiseError("for: `item` is not given");
+            }
 
+            var from: number = parseInt(params['from']) || 0;
+            var to: number   = parseInt(params['to'])   || 0;
+            var step: number = parseInt(params['step']) || 1;
+
+            var yielded = false, itemVar = params['item'];
+            if (step < 0) {
+                for (var i = from; i >= to; i += step) {
+                    this.dict[itemVar] = i;
+                    yieldFunc();
+                    yielded = true;
+                }
+            } else {
+                for (var i = from; i <= to; i += step) {
+                    this.dict[itemVar] = i;
+                    yieldFunc();
+                    yielded = true;
+                }
+            }
+
+            if (!yielded && elseFunc) {
+                elseFunc();
+            }
         }
 
         startCapture(name:string, assign:string):void {

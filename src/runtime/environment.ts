@@ -39,7 +39,10 @@ module Jarty {
             if (!key) {
                 this.runtime.raiseError("`$jarty.foreach." + name + "` must be followed by property name");
             }
-            if (!this.foreachs.hasOwnProperty(key)) {
+            if (!this.foreachs.hasOwnProperty(name)) {
+                this.runtime.raiseError("`$jarty.foreach." + name + "` does not exist");
+            }
+            if (!this.foreachs[name].hasOwnProperty(key)) {
                 this.runtime.raiseError("`$jarty.foreach." + name + "." + key + "` does not exist");
             }
             return this.foreachs[name][key];

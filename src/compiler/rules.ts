@@ -48,27 +48,6 @@ module Jarty.Rules {
     // block close tag  ex:  {/foo}  {/bar}
     var eCloseTag = '\\{\\s*/(' + eSymbol + ')\\s*\\}';
 
-    export var SpecialTags:{ [index: string]: TranslationRule } = {
-        "if": Rules.inIfTag,
-        "else": Rules.inElseTag,
-        "elseif": Rules.inElseIfTag,
-        "/if": Rules.inEndIfTag,
-        "foreach": Rules.inForeachTag,
-        "foreachelse": Rules.inForeachElseTag,
-        "/foreach": Rules.inEndForeachTag,
-        "for": Rules.inForTag,
-        "forelse": Rules.inForElseTag,
-        "/for": Rules.inEndForTag
-    };
-
-    export var SpecialBarewords:{ [index: string]: string } = {
-        "true": "true",
-        "false": "false",
-        "null": "null",
-        "undefined": "undefined",
-        "NaN": "NaN"
-    };
-
     export var start:TranslationRule = {
         pattern: new RegExp([
             eCommentTag,
@@ -504,6 +483,28 @@ module Jarty.Rules {
         enter: (ctx:TranslationContext) => {
             ctx.write("});");
         }
+    };
+
+
+    export var SpecialTags:{ [index: string]: TranslationRule } = {
+        "if": Rules.inIfTag,
+        "else": Rules.inElseTag,
+        "elseif": Rules.inElseIfTag,
+        "/if": Rules.inEndIfTag,
+        "foreach": Rules.inForeachTag,
+        "foreachelse": Rules.inForeachElseTag,
+        "/foreach": Rules.inEndForeachTag,
+        "for": Rules.inForTag,
+        "forelse": Rules.inForElseTag,
+        "/for": Rules.inEndForTag
+    };
+
+    export var SpecialBarewords:{ [index: string]: string } = {
+        "true": "true",
+        "false": "false",
+        "null": "null",
+        "undefined": "undefined",
+        "NaN": "NaN"
     };
 
 }
