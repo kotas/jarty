@@ -2,5 +2,4 @@ language: node_js
 node_js:
   - "0.10"
 before_script:
-  - npm install bower grunt-cli
-  - ./node_modules/bower/bin/bower install
+  - npm install grunt-cli
