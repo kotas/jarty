@@ -11,12 +11,17 @@
     "url": "git://github.com/kotas/jarty.git"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-typescript": "~0.2.4",
+    "grunt": "~0.4.2",
+    "grunt-typescript": "~0.2.7",
     "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-uglify": "~0.2.5",
+    "grunt-contrib-uglify": "~0.3.1",
     "grunt-contrib-clean": "~0.5.0",
     "grunt-contrib-watch": "~0.5.3",
-    "js-beautify": "~1.4.1"
+    "js-beautify": "~1.4.2",
+    "testem": "~0.6.5"
+  },
+  "scripts": {
+    "start": "./node_modules/.bin/testem",
+    "test": "./node_modules/.bin/testem ci"
   }
 }
